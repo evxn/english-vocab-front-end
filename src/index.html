@@ -9,6 +9,16 @@
       integrity="sha384-9gVQ4dYFwwWSjIDZnLEWnxCjeSWFphJiwGPXr1jddIhOegiu1FwO5qRGvFXOdJZ4"
       crossorigin="anonymous"
     />
+    <style>
+      .letter {
+        width: 44px;
+        height: 44px;
+        border-radius: 6px;
+      }
+      .cursor-pointer {
+        cursor: pointer;
+      }
+    </style>
   </head>
   <body>
     <div class="container py-5">
@@ -26,16 +36,20 @@
         </p>
 
         <div>
+          <template id="letters-template">
+            <div
+              class="letter cursor-pointer d-flex align-items-center justify-content-center text-white bg-success mr-2"
+              role="button"
+            ></div>
+          </template>
           <div
             id="answer"
             class="bg-light mx-1 mb-3"
             style="height: 46px; border-radius: 6px"
           ></div>
-          <div id="letters"></div>
+          <div id="letters" class="d-flex align-tems-center"></div>
         </div>
       </div>
     </div>
-
-    <script src="./bundle.js"></script>
   </body>
 </html>
