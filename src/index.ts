@@ -37,8 +37,9 @@ const createLetterElem = (letter: string) => {
 import { shuffle, takeFirst } from "./utils";
 import { allWords } from "./words-list";
 
-interface GameState {
-  awaitingLetterAtIndex: number;
+// ----------- GAME STATE ------------
+
+export interface GameState {
   currentQuestionIndex: number;
   maxWrongInputs: number; // default: 3
   shuffledLetters: string[];
@@ -46,6 +47,19 @@ interface GameState {
   wrongInputs: Map<string, number>; // ("apple", 2)
   // eventsQueue: unknown[]; // to abstract from DOM input events
 }
+
+export const isGameInProgress: (state: GameState) => boolean = ({
+  currentQuestionIndex,
+  maxWrongInputs,
+  wrongInputs,
+  words,
+  shuffledLetters,
+}) =>
+  currentQuestionIndex < words.length - 1 ||
+  shuffledLetters.length > 0 ||
+  (wrongInputs.get(words[currentQuestionIndex]) ?? 0) < maxWrongInputs;
+
+// ------------- GLOBALS -------------
 
 enum CustomEvents {
   INPUT_LETTER = "input_letter",
@@ -58,6 +72,8 @@ declare global {
     [CustomEvents.INPUT_LETTER]: CustomEvent<InputLetterEventDetail>;
   }
 }
+
+// -----------------------------------
 
 (function main() {
   const shuffledWords = shuffle(allWords);
