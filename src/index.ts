@@ -86,11 +86,10 @@ declare global {
     maxWrongInputs: 3,
     currentQuestionIndex,
     shuffledLetters,
-    awaitingLetterAtIndex: 0,
   };
 
-  document.addEventListener(CustomEvents.INPUT_LETTER, ({detail: letter}) => {
-    console.log(letter.toLowerCase());   
+  document.addEventListener(CustomEvents.INPUT_LETTER, ({ detail: letter }) => {
+    console.log(letter.toLowerCase());
   });
 
   const answerContainer = getElementById("answer");
@@ -103,7 +102,7 @@ declare global {
 
     const letter = (evt.target as HTMLElement).dataset?.letter;
 
-    if (!letter ) {
+    if (!letter) {
       return;
     }
 
@@ -111,7 +110,7 @@ declare global {
 
     document.dispatchEvent(
       new CustomEvent(CustomEvents.INPUT_LETTER, {
-        detail: letter ,
+        detail: letter,
       }),
     );
   });
