@@ -34,6 +34,8 @@ const createLetterElem = (letter: string) => {
   return clone;
 };
 
+// -----------------------------------
+
 import { shuffle, takeFirst } from "./utils";
 import { allWords } from "./words-list";
 import * as Zipper from "./zipper";
@@ -42,17 +44,15 @@ import * as GameState from "./game-state";
 // TODO remove
 window["GameState"] = GameState;
 
-// ------------- GLOBALS -------------
+// ------------- EVENTS -------------
 
 enum CustomEvents {
   INPUT_LETTER = "input_letter",
 }
 
-type InputLetterEventDetail = string;
-
 declare global {
   interface GlobalEventHandlersEventMap {
-    [CustomEvents.INPUT_LETTER]: CustomEvent<InputLetterEventDetail>;
+    [CustomEvents.INPUT_LETTER]: CustomEvent<string>;
   }
 }
 
@@ -68,7 +68,7 @@ declare global {
   // Zipper.init is safe because of the check that allWords is non-empty
   const words = Zipper.init(takeFirst(6, shuffledWords));
 
-  const state: GameState.Type = GameState.withShuffledLetters({
+  const state = GameState.init({
     words,
     wrongInputs: new Map(),
     maxWrongInputs: 3,
@@ -86,14 +86,19 @@ declare global {
     // - update word's wrong inputs count
     // - if word's wrong inputs count >= max
     // - - if game in progress
-    // - - - next level
+    // - - - schedule display next question
     // - - else
-    // - - - display statistics
+    // - - - schedule display statistics
     // - else
-    // - - - if the letter is in shuffled letters make it red
+    // - - - if the letter is in shuffled letters then toggle red animation
     // else
     // - remove the letter from the shuffled letters
     // - move the element to answer section
+    // - if shuffled letters is empty
+    // - - if game in progress
+    // - - - schedule display next question
+    // - - else
+    // - - - schedule display statistics
   });
 
   const answerContainer = getElementById("answer");

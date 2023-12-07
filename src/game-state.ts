@@ -21,9 +21,9 @@ export const isInProgress: (state: Type) => boolean = ({
 
 // safety: ensure that all the words have a non trivial shuffle
 // returns the passed state mutated in-place
-export const withShuffledLetters: (
-  state: WithOptional<Type, "shuffledLetters">,
-) => Type = (state) => {
+export const init: (state: WithOptional<Type, "shuffledLetters">) => Type = (
+  state,
+) => {
   const { words } = state;
 
   const word = words.current;
@@ -39,7 +39,7 @@ export const withShuffledLetters: (
 
   state.shuffledLetters = shuffledLetters;
 
-  // cast is safe cause there is always a word in Zipper
+  // cast is safe cause shuffledLetters was initialized
   return state as Type;
 };
 
@@ -49,7 +49,7 @@ export const nextQuestion: (state: Type) => Type = (state) => {
   const { words } = state;
 
   state.words = Zipper.next(words);
-  state = withShuffledLetters(state);
+  state = init(state);
 
   return state;
 };
