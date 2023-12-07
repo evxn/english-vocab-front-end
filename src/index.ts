@@ -56,8 +56,11 @@ export const isGameInProgress: (state: GameState) => boolean = ({
   shuffledLetters,
 }) =>
   currentQuestionIndex < words.length - 1 ||
-  shuffledLetters.length > 0 ||
+  shuffledLetters.length > 0 &&
   (wrongInputs.get(words[currentQuestionIndex]) ?? 0) < maxWrongInputs;
+
+// TODO implement
+let nextLevel: (state: GameState) => GameState;
 
 // ------------- GLOBALS -------------
 
@@ -106,6 +109,21 @@ declare global {
 
   document.addEventListener(CustomEvents.INPUT_LETTER, ({ detail: letter }) => {
     console.log(letter.toLowerCase());
+    // TODO update game state on input:
+    // early return if game is not in progress
+    // 
+    // if a letter != expected letter
+    // - update word's wrong inputs count
+    // - if word's wrong inputs count >= max
+    // - - if in progress
+    // - - - next level
+    // - - else
+    // - - - display statistics
+    // - else
+    // - - - if the letter is in shuffled letters make it red
+    // else
+    // - remove the letter from the shuffled letters
+    // - move the element to answer section
   });
 
   const answerContainer = getElementById("answer");
