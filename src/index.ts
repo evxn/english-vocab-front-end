@@ -18,19 +18,17 @@ const createElementFromTemplate = (template: HTMLTemplateElement) =>
 const appendChild = (container: HTMLElement, node: Node) =>
   container.appendChild(node);
 
-const createLetterElem = (char: string) => {
-  const template = getElementById(
-    "letters-template",
-  ) as HTMLTemplateElement;
-  
+const createLetterElem = (letter: string) => {
+  const template = getElementById("letters-template") as HTMLTemplateElement;
+
   const clone = createElementFromTemplate(template);
 
   const contentRoot = clone.querySelector("div");
   if (!contentRoot) {
     throw new Error("template must contain a root div element");
   }
-  contentRoot.dataset.char = char;
-  const text = createTextNode(char);
+  contentRoot.dataset.letter = letter;
+  const text = createTextNode(letter);
   appendChild(contentRoot, text);
 
   return clone;
@@ -47,6 +45,18 @@ interface GameState {
   words: string[]; // invariant: unique words with at least 2 distinct letters
   wrongInputs: Map<string, number>; // ("apple", 2)
   // eventsQueue: unknown[]; // to abstract from DOM input events
+}
+
+enum CustomEvents {
+  INPUT_LETTER = "input_letter",
+}
+
+type InputLetterEventDetail = string;
+
+declare global {
+  interface GlobalEventHandlersEventMap {
+    [CustomEvents.INPUT_LETTER]: CustomEvent<InputLetterEventDetail>;
+  }
 }
 
 (function main() {
@@ -79,6 +89,10 @@ interface GameState {
     awaitingLetterAtIndex: 0,
   };
 
+  document.addEventListener(CustomEvents.INPUT_LETTER, ({detail: letter}) => {
+    console.log(letter.toLowerCase());   
+  });
+
   const answerContainer = getElementById("answer");
   const lettersContainer = getElementById("letters");
 
@@ -87,19 +101,42 @@ interface GameState {
       return;
     }
 
-    const char = (evt.target as HTMLElement).dataset?.char;
+    const letter = (evt.target as HTMLElement).dataset?.letter;
 
-    if (!char) {
+    if (!letter ) {
       return;
     }
 
-    console.log(char);
+    // console.log(letter );
+
+    document.dispatchEvent(
+      new CustomEvent(CustomEvents.INPUT_LETTER, {
+        detail: letter ,
+      }),
+    );
   });
 
   for (const letter of shuffledLetters) {
     const elem = createLetterElem(letter);
     appendChild(lettersContainer, elem);
   }
+
+  document.addEventListener("keydown", ({ key }) => {
+    // TODO early return when CTRL, META or ALT is also pressed
+
+    // console.log(key);
+
+    const latinRegex = /^[a-zA-Z]$/;
+    if (!latinRegex.test(key)) {
+      return; // key is not latin
+    }
+
+    document.dispatchEvent(
+      new CustomEvent(CustomEvents.INPUT_LETTER, {
+        detail: key,
+      }),
+    );
+  });
 
   console.log(state);
 })();
