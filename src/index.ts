@@ -57,8 +57,8 @@ export const isGameInProgress: (state: GameState) => boolean = ({
   shuffledLetters,
 }) =>
   currentQuestionIndex < words.length - 1 ||
-  shuffledLetters.length > 0 &&
-  (wrongInputs.get(words[currentQuestionIndex]) ?? 0) < maxWrongInputs;
+  (shuffledLetters.length > 0 &&
+    (wrongInputs.get(words[currentQuestionIndex]) ?? 0) < maxWrongInputs);
 
 // safety: state.words.length > 0
 // returns the passed state mutated in-place
