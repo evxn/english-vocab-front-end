@@ -46,13 +46,13 @@ window["GameState"] = GameState;
 
 // ------------- EVENTS -------------
 
-enum CustomEvents {
-  INPUT_LETTER = "input_letter",
+enum EventTypes {
+  INPUT_LETTER = "INPUT_LETTER",
 }
 
 declare global {
   interface GlobalEventHandlersEventMap {
-    [CustomEvents.INPUT_LETTER]: CustomEvent<string>;
+    [EventTypes.INPUT_LETTER]: CustomEvent<string>;
   }
 }
 
@@ -77,7 +77,7 @@ declare global {
   // TODO remove
   window["state"] = state;
 
-  document.addEventListener(CustomEvents.INPUT_LETTER, ({ detail: letter }) => {
+  document.addEventListener(EventTypes.INPUT_LETTER, ({ detail: letter }) => {
     console.log(letter.toLowerCase());
     // TODO update game state on input:
     // early return if game is not in progress
@@ -115,10 +115,11 @@ declare global {
       return;
     }
 
-    // console.log(letter );
+    // TODO remove
+    // console.log(letter);
 
     document.dispatchEvent(
-      new CustomEvent(CustomEvents.INPUT_LETTER, {
+      new CustomEvent(EventTypes.INPUT_LETTER, {
         detail: letter,
       }),
     );
@@ -132,6 +133,7 @@ declare global {
   document.addEventListener("keydown", ({ key }) => {
     // TODO early return when CTRL, META or ALT is also pressed
 
+    // TODO remove
     // console.log(key);
 
     const latinRegex = /^[a-zA-Z]$/;
@@ -140,11 +142,12 @@ declare global {
     }
 
     document.dispatchEvent(
-      new CustomEvent(CustomEvents.INPUT_LETTER, {
+      new CustomEvent(EventTypes.INPUT_LETTER, {
         detail: key,
       }),
     );
   });
-
+  
+  // TODO remove
   console.log(state);
 })();
