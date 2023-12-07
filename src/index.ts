@@ -35,65 +35,12 @@ const createLetterElem = (letter: string) => {
 };
 
 import { shuffle, takeFirst } from "./utils";
-import type { WithOptional } from "./utils";
 import { allWords } from "./words-list";
-
-// ----------- GAME STATE ------------
-
-export interface GameState {
-  currentQuestionIndex: number;
-  maxWrongInputs: number; // default: 3
-  shuffledLetters: string[];
-  words: string[]; // invariant: unique words with at least 2 distinct letters
-  wrongInputs: Map<string, number>; // ("apple", 2)
-  // eventsQueue: unknown[]; // to abstract from DOM input events
-}
-
-export const isGameInProgress: (state: GameState) => boolean = ({
-  currentQuestionIndex,
-  maxWrongInputs,
-  wrongInputs,
-  words,
-  shuffledLetters,
-}) =>
-  currentQuestionIndex < words.length - 1 ||
-  (shuffledLetters.length > 0 &&
-    (wrongInputs.get(words[currentQuestionIndex]) ?? 0) < maxWrongInputs);
-
-// safety: state.words.length > 0
-// returns the passed state mutated in-place
-export const nextQuestion: (
-  state: WithOptional<GameState, "currentQuestionIndex" | "shuffledLetters">,
-) => GameState = (state) => {
-  const { currentQuestionIndex: previousQuestionIndex, words } = state;
-
-  // if not the last question
-  if (previousQuestionIndex !== words.length - 1) {
-    const currentQuestionIndex =
-      previousQuestionIndex === undefined ? 0 : previousQuestionIndex + 1;
-    // array indexing is safe if ensured state.words.length > 0
-    const word = words[currentQuestionIndex];
-    const letters = word.split("");
-    let shuffledLetters: string[];
-
-    // re-shuffle when after the shuffle we end up with the same word
-    // safety: ensure that all the words have a non trivial shuffle
-    // shuffling ["a"] or ["b", "b"] for example, will result in an infinite loop
-    do {
-      shuffledLetters = shuffle(letters);
-    } while (shuffledLetters.join("") === word); // ignore a noop shuffle
-
-    state.currentQuestionIndex = currentQuestionIndex;
-    state.shuffledLetters = shuffledLetters;
-  }
-
-  // cast is safe if ensured state.words.length > 0
-  return state as GameState;
-};
+import * as Zipper from "./zipper";
+import * as GameState from "./game-state";
 
 // TODO remove
-window["nextQuestion"] = nextQuestion;
-window["isGameInProgress"] = isGameInProgress;
+window["GameState"] = GameState;
 
 // ------------- GLOBALS -------------
 
@@ -112,10 +59,16 @@ declare global {
 // -----------------------------------
 
 (function main() {
-  const shuffledWords = shuffle(allWords);
-  const words = takeFirst(6, shuffledWords);
+  if (allWords.length === 0) {
+    return;
+  }
 
-  const state: GameState = nextQuestion({
+  const shuffledWords = shuffle(allWords);
+
+  // Zipper.init is safe because of the check that allWords is non-empty
+  const words = Zipper.init(takeFirst(6, shuffledWords));
+
+  const state: GameState.Type = GameState.withShuffledLetters({
     words,
     wrongInputs: new Map(),
     maxWrongInputs: 3,
