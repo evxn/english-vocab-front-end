@@ -12,11 +12,56 @@ const createTextNode = ((context) => context.createTextNode.bind(context))(
   document,
 );
 
+const isElement = (node: Node | ChildNode): node is Element =>
+  node.nodeType === Node.ELEMENT_NODE;
+
 const createElementFromTemplate = (template: HTMLTemplateElement) =>
   template.content.cloneNode(true) as DocumentFragment;
 
-const appendChild = (container: HTMLElement, node: Node) =>
+const appendChild = (container: Element, node: Node) =>
   container.appendChild(node);
+
+// safety: ensure container element has children
+const replaceLastChild = (container: Element, node: Node) =>
+  container.replaceChild(node, container.lastChild!);
+
+const updateLetterValue = (letter: string, elem: Element) => {
+  elem.setAttribute("data-letter", letter);
+
+  const text = createTextNode(letter);
+
+  if (elem.lastChild === null) {
+    appendChild(elem, text);
+  } else {
+    replaceLastChild(elem, text);
+  }
+
+  console.dir(elem);
+};
+
+const elemEntries = function* <T extends ChildNode>(
+  childNodes: NodeListOf<T>,
+): IterableIterator<[number, Element]> {
+  let elemIndex: number = -1;
+  for (const node of childNodes.values()) {
+    if (isElement(node)) {
+      elemIndex += 1;
+      yield [elemIndex, node];
+    }
+  }
+};
+
+const findElemIndex = (
+  container: Element,
+  target: Element,
+): number | undefined => {
+  for (const [elemIndex, node] of elemEntries(container.childNodes)) {
+    if (node === target) {
+      return elemIndex;
+    }
+  }
+  return undefined;
+};
 
 const createLetterElem = (letter: string) => {
   const template = getElementById("letters-template") as HTMLTemplateElement;
@@ -27,9 +72,8 @@ const createLetterElem = (letter: string) => {
   if (!contentRoot) {
     throw new Error("template must contain a root div element");
   }
-  contentRoot.dataset.letter = letter;
-  const text = createTextNode(letter);
-  appendChild(contentRoot, text);
+
+  updateLetterValue(letter, contentRoot);
 
   return clone;
 };
@@ -40,6 +84,7 @@ import { shuffle, takeFirst } from "./utils";
 import { allWords } from "./words-list";
 import * as Zipper from "./zipper";
 import * as GameState from "./game-state";
+import { TaskQueue } from "./task-queue";
 
 // TODO remove
 window["GameState"] = GameState;
@@ -50,9 +95,14 @@ enum EventTypes {
   INPUT_LETTER = "INPUT_LETTER",
 }
 
+interface InputLetterEventDetail {
+  letter: string;
+  letterElemIndex?: number; // is used to make the right elem red on click if there're duplicate letters
+}
+
 declare global {
   interface GlobalEventHandlersEventMap {
-    [EventTypes.INPUT_LETTER]: CustomEvent<string>;
+    [EventTypes.INPUT_LETTER]: CustomEvent<InputLetterEventDetail>;
   }
 }
 
@@ -68,73 +118,201 @@ declare global {
   // Zipper.init is safe because of the check that allWords is non-empty
   const words = Zipper.init(takeFirst(6, shuffledWords));
 
-  const state = GameState.init({
+  let state = GameState.init({
     words,
     wrongInputs: new Map(),
-    maxWrongInputs: 3,
+    maxWrongInputs: 30,
   });
 
   // TODO remove
   window["state"] = state;
 
-  document.addEventListener(EventTypes.INPUT_LETTER, ({ detail: letter }) => {
-    console.log(letter.toLowerCase());
-    // TODO update game state on input:
-    // early return if game is not in progress
-    //
-    // if a letter.toLower() != expected letter
-    // - update word's wrong inputs count
-    // - if word's wrong inputs count >= max
-    // - - if game in progress
-    // - - - schedule display next question
-    // - - else
-    // - - - schedule display statistics
-    // - else
-    // - - - if the letter is in shuffled letters then toggle red animation
-    // else
-    // - remove the letter from the shuffled letters
-    // - move the element to answer section
-    // - if shuffled letters is empty
-    // - - if game in progress
-    // - - - schedule display next question
-    // - - else
-    // - - - schedule display statistics
-  });
-
   const answerContainer = getElementById("answer");
   const lettersContainer = getElementById("letters");
+  const currentQuestionContainer = getElementById("current_question");
+  const totalQuestionsContainer = getElementById("total_questions");
+  const animationQueue = new TaskQueue();
 
-  lettersContainer.addEventListener("click", (evt) => {
-    if (!evt.target) {
+  document.addEventListener(
+    EventTypes.INPUT_LETTER,
+    ({ detail: { letter, letterElemIndex } }) => {
+      if (!GameState.isInProgress(state)) {
+        return;
+      }
+
+      const { words, shuffledLetters, maxWrongInputs } = state;
+
+      if (shuffledLetters.length === 0) {
+        return;
+      }
+      
+      const word = words.current;
+      const expectedLetter = word[word.length - shuffledLetters.length];
+      const lowerCaseLetter = letter.toLowerCase();
+      const letterIndex =
+        letterElemIndex ?? state.shuffledLetters.indexOf(lowerCaseLetter);
+      const letterFoundInShuffled = letterIndex !== -1;
+
+      if (lowerCaseLetter === expectedLetter) {
+        // remove the letter from the shuffled letters
+        if (letterFoundInShuffled) {
+          state.shuffledLetters.splice(letterIndex, 1);
+
+          // safety: non-null assertion assumes that shuffledLetters state one to one syncronized with the DOM elements
+          const letterElem = lettersContainer.children.item(letterIndex)!;
+          // cancel previosly queued animation
+          const oldTaskId = letterElem.getAttribute("data-task-id");
+          if (oldTaskId !== null) {
+            // cancel previosly queued animation
+            animationQueue.remove(parseInt(oldTaskId , 10));
+          }
+
+          const taskId = animationQueue.push(() => {
+            letterElem.classList.remove("bg-info");
+            letterElem.classList.remove("bg-danger");
+            letterElem.classList.add("bg-success");
+            letterElem.removeAttribute("data-task-id");
+          }, 150);
+
+          letterElem.setAttribute("data-task-id", String(taskId));
+          
+          // move the element to the answer section
+          answerContainer.appendChild(letterElem);
+
+          if (state.shuffledLetters.length === 0) {
+            if (GameState.isInProgress(state)) {
+              // Schedule display next question
+              animationQueue.push(()=>{
+                // clear old nodes
+                animationQueue.clear();
+                answerContainer.innerHTML = "";
+                // generate and append new nodes
+                state = GameState.nextQuestion(state);
+                for (const letter of state.shuffledLetters) {
+                  const elem = createLetterElem(letter);
+                  appendChild(lettersContainer, elem);
+                }
+
+                currentQuestionContainer.textContent =  `${Zipper.indexOfCurrent(state.words) + 1}`;
+              }, 800);
+            } else {
+              // Schedule display statistics
+              // scheduleDisplayStatistics();
+              // TODO remove
+              console.log(state);
+            }
+          }
+        }
+      } else {
+        const wrongInputsCount = (state.wrongInputs.get(word) ?? 0) + 1;
+
+        if (wrongInputsCount <= state.maxWrongInputs) {
+          state.wrongInputs.set(word, wrongInputsCount);
+
+          if (wrongInputsCount === state.maxWrongInputs) {
+            animationQueue.clear();
+            // move nodes from #letters to #answer container
+            answerContainer.append(...lettersContainer.childNodes);
+
+            for (const [answerElemIndex, elem] of elemEntries(
+              answerContainer.childNodes,
+            )) {
+              // owerwrite element's letter
+              updateLetterValue(word[answerElemIndex], elem);
+
+              // cancel previosly queued animation
+              const oldTaskId = elem.getAttribute("data-task-id");
+              if (oldTaskId !== null) {
+                // cancel previosly queued animation
+                animationQueue.remove(parseInt(oldTaskId , 10));
+              }
+
+              // make bg red
+              const taskId = animationQueue.push(() => {
+                elem.classList.remove("bg-info");
+                elem.classList.add("bg-danger");
+                elem.removeAttribute("data-task-id");
+              }, 50);
+
+              elem.setAttribute("data-task-id", String(taskId));
+            }
+          } else {
+            if (letterFoundInShuffled) {
+              // Toggle error animation if the letter is in shuffled letters
+              // safety: non-null assertion assumes that shuffledLetters state one to one syncronized with the DOM elements
+              const letterElem = lettersContainer.children.item(letterIndex)!;
+              letterElem.classList.remove("bg-info");
+              letterElem.classList.add("bg-danger");
+              
+              const oldTaskId = letterElem.getAttribute("data-task-id");
+              if (oldTaskId !== null) {
+                // cancel previosly queued animation
+                animationQueue.remove(parseInt(oldTaskId , 10));
+              }
+
+              const taskId = animationQueue.push(() => {
+                letterElem.classList.remove("bg-danger");
+                letterElem.classList.add("bg-info");
+                letterElem.removeAttribute("data-task-id");
+              }, 400);
+
+              letterElem.setAttribute("data-task-id", String(taskId));
+            }
+          }
+        } else {
+          if (GameState.isInProgress(state)) {
+            // Schedule display next question
+            animationQueue.push(()=>{
+              // clear old nodes
+              animationQueue.clear();
+              answerContainer.innerHTML = "";
+              // generate and append new nodes
+              state = GameState.nextQuestion(state);
+              for (const letter of state.shuffledLetters) {
+                const elem = createLetterElem(letter);
+                appendChild(lettersContainer, elem);
+              }
+
+              currentQuestionContainer.textContent =  `${Zipper.indexOfCurrent(state.words) + 1}`;
+            }, 800);
+          } else {
+            // Schedule display statistics
+            // scheduleDisplayStatistics();
+            console.log(state);
+          }
+        }
+      }
+    },
+  );
+
+  lettersContainer.addEventListener("click", ({ target }): void => {
+    if (!target || !isElement(target as Node)) {
       return;
     }
 
-    const letter = (evt.target as HTMLElement).dataset?.letter;
+    const elem = target as HTMLElement;
+    const letter = elem.dataset?.letter;
 
     if (!letter) {
       return;
     }
 
-    // TODO remove
-    // console.log(letter);
+    const letterElemIndex = findElemIndex(lettersContainer, elem);
 
     document.dispatchEvent(
       new CustomEvent(EventTypes.INPUT_LETTER, {
-        detail: letter,
+        detail: {
+          letter,
+          letterElemIndex,
+        },
       }),
     );
   });
 
-  for (const letter of state.shuffledLetters) {
-    const elem = createLetterElem(letter);
-    appendChild(lettersContainer, elem);
-  }
-
-  document.addEventListener("keydown", ({ key }) => {
-    // TODO early return when CTRL, META or ALT is also pressed
-
-    // TODO remove
-    // console.log(key);
+  document.addEventListener("keydown", ({ key, ctrlKey, metaKey, altKey, repeat }) => {
+    if (ctrlKey || metaKey || altKey || repeat) {
+      return;
+    }
 
     const latinRegex = /^[a-zA-Z]$/;
     if (!latinRegex.test(key)) {
@@ -143,11 +321,20 @@ declare global {
 
     document.dispatchEvent(
       new CustomEvent(EventTypes.INPUT_LETTER, {
-        detail: key,
+        detail: { letter: key },
       }),
     );
   });
+
+  for (const letter of state.shuffledLetters) {
+    const elem = createLetterElem(letter);
+    appendChild(lettersContainer, elem);
+  }
   
+  currentQuestionContainer.textContent = 
+  `${Zipper.indexOfCurrent(state.words) + 1}`;
+  totalQuestionsContainer.textContent = `${Zipper.length(state.words)}`;
+
   // TODO remove
   console.log(state);
 })();

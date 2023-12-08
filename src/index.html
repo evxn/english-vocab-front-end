@@ -14,10 +14,16 @@
         width: 44px;
         height: 44px;
         border-radius: 6px;
+        transition: background-color .3s;
       }
-      .cursor-pointer {
+
+      #letters > .letter {
         cursor: pointer;
       }
+
+      // TODO transitionable property bg-color with easing
+      // jiggle .bg-info, .bg-success and .bg-error classes
+      // thick round border
     </style>
   </head>
   <body>
@@ -31,20 +37,20 @@
           Form a valid English word using the given letters
         </p>
         <p class="mb-5">
-          Question <span id="current_question">1</span> of
-          <span id="total_questions">10</span>
+          Question <span id="current_question"></span> of
+          <span id="total_questions"></span>
         </p>
 
         <div>
           <template id="letters-template">
             <div
-              class="letter cursor-pointer d-flex align-items-center justify-content-center text-white bg-success mr-2"
+              class="letter cursor-pointer d-flex align-items-center justify-content-center text-white bg-info mr-2"
               role="button"
             ></div>
           </template>
           <div
             id="answer"
-            class="bg-light mx-1 mb-3"
+            class="d-flex align-tems-center bg-light mx-1 mb-3"
             style="height: 46px; border-radius: 6px"
           ></div>
           <div id="letters" class="d-flex align-tems-center"></div>

@@ -49,7 +49,7 @@ export const nextQuestion: (state: Type) => Type = (state) => {
   const { words } = state;
 
   state.words = Zipper.next(words);
-  state = init(state);
+  state = init(state); // initialize shuffled letters for a new word
 
   return state;
 };
