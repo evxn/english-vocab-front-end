@@ -1,12 +1,12 @@
 // https://stackoverflow.com/questions/380438/what-is-the-zipper-data-structure-and-should-i-be-using-it
 // Example usage:
 // const arr = [1, 2, 3, 4, 5];
-// const zipper = init(arr);
+// let zipper = init(arr);
 // console.log(zipper.current); // Output: 1
-// const movedNext = next(zipper);
-// console.log(movedNext.current); // Output: 2
-// const movedPrev = prev(movedNext);
-// console.log(movedPrev.current); // Output: 1
+// zipper = next(zipper);
+// console.log(zipper.current); // Output: 2
+// zipper = prev(zipper);
+// console.log(zipper.current); // Output: 1
 export interface Type<T> {
   current: T;
   prev: T[];
