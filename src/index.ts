@@ -200,6 +200,7 @@ declare global {
               // scheduleDisplayStatistics();
               // TODO remove
               console.log(state);
+              console.log(GameState.calcStats(state))
             }
           }
         }
@@ -279,6 +280,7 @@ declare global {
             // Schedule display statistics
             // scheduleDisplayStatistics();
             console.log(state);
+            console.log(GameState.calcStats(state))
           }
         }
       }

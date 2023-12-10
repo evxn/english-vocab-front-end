@@ -9,6 +9,12 @@ export interface Type {
   wrongInputs: Map<string, number>; // ("apple", 2)
 }
 
+export interface Stats {
+  perfectWords: number;
+  totalWrongInputs: number;
+  worstWord?: string;
+}
+
 export const isInProgress: (state: Type) => boolean = ({
   maxWrongInputs,
   wrongInputs,
@@ -53,3 +59,30 @@ export const nextQuestion: (state: Type) => Type = (state) => {
 
   return state;
 };
+
+export const calcStats: (state: Type) => Stats= ({words, wrongInputs}) => {
+  let totalWrongInputs = 0;
+  let perfectWords = 0;
+  let worstWord, maxFails = 0;   
+
+  for (const word of Zipper.values(words)) {
+    const fails = wrongInputs.get(word) ?? 0;
+    totalWrongInputs += fails;
+
+    if (fails === 0) {
+      perfectWords += 1;
+    }
+
+    if (fails > maxFails) {
+      maxFails = fails;
+      worstWord = word;
+    }
+  }
+  
+  return {
+    perfectWords,
+    totalWrongInputs,
+    worstWord, // returns worstWord: undefined on no fails
+  };
+};
+
