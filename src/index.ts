@@ -40,7 +40,7 @@ declare global {
     maxWrongInputs: 3,
   });
 
-  const renderState: RenderState = Render.init();
+  const renderState = Render.init();
 
   Render.renderQuestion(renderState, state);
 
@@ -110,13 +110,14 @@ declare global {
         return;
       }
 
+      // here: wrongInputsCount < maxWrongInputs
       if (letterFoundInShuffled) {
         Render.renderLetterError(renderState, letterIndex);
       }
     },
   );
 
-  renderState.lettersContainer.addEventListener("click", ({ target }): void => {
+  renderState.lettersContainer.addEventListener("click", ({ target }) => {
     if (!target || !Render.isElement(target as Node)) {
       return;
     }

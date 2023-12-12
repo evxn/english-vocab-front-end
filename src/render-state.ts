@@ -54,8 +54,8 @@ const createElementFromTemplate = (template: HTMLTemplateElement) =>
 
 const appendChild = (container: Element, node: Node) =>
   container.appendChild(node);
-// safety: ensure container element has children
 
+// safety: ensure container element has children
 const replaceLastChild = (container: Element, node: Node) =>
   container.replaceChild(node, container.lastChild!);
 
@@ -172,7 +172,6 @@ const getShuffledLetterElem = (
 const triggerLetterErrorAnimation = (
   letterElem: Element,
   animationQueue: TaskQueue,
-  delay: number,
 ) => {
   letterElem.classList.remove("bg-primary");
   letterElem.classList.add("bg-danger");
@@ -195,7 +194,7 @@ const triggerLetterErrorAnimation = (
     }, 900);
 
     letterElem.setAttribute("data-task-id", String(taskId));
-  }, delay);
+  }, 400);
 
   letterElem.setAttribute("data-task-id", String(taskId));
 };
@@ -203,7 +202,6 @@ const triggerLetterErrorAnimation = (
 const triggerLetterSuccessAnimation = (
   letterElem: Element,
   animationQueue: TaskQueue,
-  delay: number,
 ) => {
   // cancel previosly queued animation
   const oldTaskId = letterElem.getAttribute("data-task-id");
@@ -218,7 +216,7 @@ const triggerLetterSuccessAnimation = (
     letterElem.classList.remove("thick-border");
     letterElem.classList.add("bg-success");
     letterElem.removeAttribute("data-task-id");
-  }, delay);
+  }, 150);
 
   letterElem.setAttribute("data-task-id", String(taskId));
 };
@@ -254,7 +252,7 @@ export const renderLetterMatched = (
 ) => {
   const { lettersContainer, animationQueue, answerContainer } = renderState;
   const letterElem = getShuffledLetterElem(lettersContainer, letterIndex);
-  triggerLetterSuccessAnimation(letterElem, animationQueue, 150);
+  triggerLetterSuccessAnimation(letterElem, animationQueue);
   // move the element to the answer section
   appendChild(answerContainer, letterElem);
 };
@@ -298,5 +296,5 @@ export const renderLetterError = (
   const { lettersContainer, animationQueue } = renderState;
   // Trigger error animation if the letter is in shuffled letters
   let letterElem = getShuffledLetterElem(lettersContainer, letterIndex);
-  triggerLetterErrorAnimation(letterElem, animationQueue, 400);
+  triggerLetterErrorAnimation(letterElem, animationQueue);
 };

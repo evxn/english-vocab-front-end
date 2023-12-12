@@ -1,7 +1,8 @@
 {
   "scripts": {
     "start": "npx webpack serve",
-    "format": "npx prettier -w src webpack.config.ts"
+    "format": "npx prettier -w src webpack.config.ts",
+    "dev-build": "npx webpack build --mode development"
   },
   "devDependencies": {
     "@babel/core": "^7.23.5",
