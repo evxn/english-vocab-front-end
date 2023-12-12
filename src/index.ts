@@ -97,7 +97,7 @@ enum EventTypes {
 
 interface InputLetterEventDetail {
   letter: string;
-  letterElemIndex?: number; // is used to make the right elem red on click if there're duplicate letters
+  letterElemIndex?: number; // is used to make the right elem red on click if there're duplicate letters in the word
 }
 
 declare global {
@@ -232,18 +232,13 @@ declare global {
             // move nodes from #letters to #answer container
             answerContainer.append(...lettersContainer.childNodes);
 
+            state.shuffledLetters.splice(0); // clear array
+
             for (const [answerElemIndex, elem] of elemEntries(
               answerContainer.childNodes,
             )) {
               // owerwrite element's letter
               updateLetterValue(word[answerElemIndex], elem);
-
-              // cancel previosly queued animation
-              const oldTaskId = elem.getAttribute("data-task-id");
-              if (oldTaskId !== null) {
-                // cancel previosly queued animation
-                animationQueue.remove(parseInt(oldTaskId, 10));
-              }
 
               // make bg red
               const taskId = animationQueue.push(() => {
@@ -253,6 +248,39 @@ declare global {
               }, 50);
 
               elem.setAttribute("data-task-id", String(taskId));
+            }
+
+            if (GameState.isInProgress(state)) {
+              // Schedule display next question
+              animationQueue.push(() => {
+                // clear old nodes
+                animationQueue.clear();
+                answerContainer.innerHTML = "";
+                // generate and append new nodes
+                state = GameState.nextQuestion(state);
+                for (const letter of state.shuffledLetters) {
+                  const elem = createLetterElem(letter);
+                  appendChild(lettersContainer, elem);
+                }
+
+                currentQuestionContainer.textContent = `${
+                  Zipper.indexOfCurrent(state.words) + 1
+                }`;
+              }, 800);
+            } else {
+              const { perfectWords, totalWrongInputs, worstWord } =
+                GameState.calcStats(state);
+
+              perfectWordsElem.textContent = String(perfectWords);
+              totalWrongInputsElem.textContent = String(totalWrongInputs);
+
+              if (worstWord) {
+                worstWordElem.textContent = worstWord;
+              } else {
+                worstWordContainer.classList.add("d-none");
+              }
+
+              statsContainer.classList.remove("d-none");
             }
           } else {
             if (letterFoundInShuffled) {
@@ -276,39 +304,6 @@ declare global {
 
               letterElem.setAttribute("data-task-id", String(taskId));
             }
-          }
-        } else {
-          if (GameState.isInProgress(state)) {
-            // Schedule display next question
-            animationQueue.push(() => {
-              // clear old nodes
-              animationQueue.clear();
-              answerContainer.innerHTML = "";
-              // generate and append new nodes
-              state = GameState.nextQuestion(state);
-              for (const letter of state.shuffledLetters) {
-                const elem = createLetterElem(letter);
-                appendChild(lettersContainer, elem);
-              }
-
-              currentQuestionContainer.textContent = `${
-                Zipper.indexOfCurrent(state.words) + 1
-              }`;
-            }, 800);
-          } else {
-            const { perfectWords, totalWrongInputs, worstWord } =
-              GameState.calcStats(state);
-
-            perfectWordsElem.textContent = String(perfectWords);
-            totalWrongInputsElem.textContent = String(totalWrongInputs);
-
-            if (worstWord) {
-              worstWordElem.textContent = worstWord;
-            } else {
-              worstWordContainer.classList.add("d-none");
-            }
-
-            statsContainer.classList.remove("d-none");
           }
         }
       }
