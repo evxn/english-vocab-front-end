@@ -174,8 +174,9 @@ const triggerLetterErrorAnimation = (
   animationQueue: TaskQueue,
   delay: number,
 ) => {
-  letterElem.classList.remove("bg-info");
+  letterElem.classList.remove("bg-primary");
   letterElem.classList.add("bg-danger");
+  letterElem.classList.add("thick-border");
 
   const oldTaskId = letterElem.getAttribute("data-task-id");
   if (oldTaskId !== null) {
@@ -185,8 +186,15 @@ const triggerLetterErrorAnimation = (
 
   const taskId = animationQueue.push(() => {
     letterElem.classList.remove("bg-danger");
-    letterElem.classList.add("bg-info");
+    letterElem.classList.add("bg-primary");
     letterElem.removeAttribute("data-task-id");
+
+    const taskId = animationQueue.push(() => {
+      letterElem.classList.remove("thick-border");
+      letterElem.removeAttribute("data-task-id");
+    }, 900);
+
+    letterElem.setAttribute("data-task-id", String(taskId));
   }, delay);
 
   letterElem.setAttribute("data-task-id", String(taskId));
@@ -205,8 +213,9 @@ const triggerLetterSuccessAnimation = (
   }
 
   const taskId = animationQueue.push(() => {
-    letterElem.classList.remove("bg-info");
+    letterElem.classList.remove("bg-primary");
     letterElem.classList.remove("bg-danger");
+    letterElem.classList.remove("thick-border");
     letterElem.classList.add("bg-success");
     letterElem.removeAttribute("data-task-id");
   }, delay);
@@ -229,7 +238,8 @@ export const renderFailedAnswer = (renderState: RenderState, word: string) => {
 
     // make bg red
     const taskId = animationQueue.push(() => {
-      elem.classList.remove("bg-info");
+      elem.classList.remove("bg-primary");
+      elem.classList.remove("thick-border");
       elem.classList.add("bg-danger");
       elem.removeAttribute("data-task-id");
     }, 50);
