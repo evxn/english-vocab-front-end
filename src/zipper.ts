@@ -58,9 +58,7 @@ export const next: <T>(zipper: Type<T>) => Type<T> = (zipper) => {
 };
 
 // iterates over all the values in natural order
-export const values = function* <T>(
-  zipper: Type<T>,
-): IterableIterator<T> {
+export const values = function* <T>(zipper: Type<T>): IterableIterator<T> {
   for (const item of zipper.prev.values()) {
     yield item;
   }
@@ -69,4 +67,3 @@ export const values = function* <T>(
     yield item;
   }
 };
-

@@ -121,7 +121,7 @@ declare global {
   let state = GameState.init({
     words,
     wrongInputs: new Map(),
-    maxWrongInputs: 30,
+    maxWrongInputs: 3,
   });
 
   // TODO remove
@@ -131,6 +131,13 @@ declare global {
   const lettersContainer = getElementById("letters");
   const currentQuestionContainer = getElementById("current_question");
   const totalQuestionsContainer = getElementById("total_questions");
+
+  const statsContainer = getElementById("stats");
+  const perfectWordsElem = getElementById("perfect_words");
+  const totalWrongInputsElem = getElementById("total_wrong_inputs");
+  const worstWordContainer = getElementById("worst_word_container");
+  const worstWordElem = getElementById("worst_word");
+
   const animationQueue = new TaskQueue();
 
   document.addEventListener(
@@ -145,7 +152,7 @@ declare global {
       if (shuffledLetters.length === 0) {
         return;
       }
-      
+
       const word = words.current;
       const expectedLetter = word[word.length - shuffledLetters.length];
       const lowerCaseLetter = letter.toLowerCase();
@@ -164,7 +171,7 @@ declare global {
           const oldTaskId = letterElem.getAttribute("data-task-id");
           if (oldTaskId !== null) {
             // cancel previosly queued animation
-            animationQueue.remove(parseInt(oldTaskId , 10));
+            animationQueue.remove(parseInt(oldTaskId, 10));
           }
 
           const taskId = animationQueue.push(() => {
@@ -175,14 +182,14 @@ declare global {
           }, 150);
 
           letterElem.setAttribute("data-task-id", String(taskId));
-          
+
           // move the element to the answer section
           answerContainer.appendChild(letterElem);
 
           if (state.shuffledLetters.length === 0) {
             if (GameState.isInProgress(state)) {
               // Schedule display next question
-              animationQueue.push(()=>{
+              animationQueue.push(() => {
                 // clear old nodes
                 animationQueue.clear();
                 answerContainer.innerHTML = "";
@@ -193,14 +200,24 @@ declare global {
                   appendChild(lettersContainer, elem);
                 }
 
-                currentQuestionContainer.textContent =  `${Zipper.indexOfCurrent(state.words) + 1}`;
+                currentQuestionContainer.textContent = `${
+                  Zipper.indexOfCurrent(state.words) + 1
+                }`;
               }, 800);
             } else {
-              // Schedule display statistics
-              // scheduleDisplayStatistics();
-              // TODO remove
-              console.log(state);
-              console.log(GameState.calcStats(state))
+              const { perfectWords, totalWrongInputs, worstWord } =
+                GameState.calcStats(state);
+
+              perfectWordsElem.textContent = String(perfectWords);
+              totalWrongInputsElem.textContent = String(totalWrongInputs);
+
+              if (worstWord) {
+                worstWordElem.textContent = worstWord;
+              } else {
+                worstWordContainer.classList.add("d-none");
+              }
+
+              statsContainer.classList.remove("d-none");
             }
           }
         }
@@ -225,7 +242,7 @@ declare global {
               const oldTaskId = elem.getAttribute("data-task-id");
               if (oldTaskId !== null) {
                 // cancel previosly queued animation
-                animationQueue.remove(parseInt(oldTaskId , 10));
+                animationQueue.remove(parseInt(oldTaskId, 10));
               }
 
               // make bg red
@@ -244,11 +261,11 @@ declare global {
               const letterElem = lettersContainer.children.item(letterIndex)!;
               letterElem.classList.remove("bg-info");
               letterElem.classList.add("bg-danger");
-              
+
               const oldTaskId = letterElem.getAttribute("data-task-id");
               if (oldTaskId !== null) {
                 // cancel previosly queued animation
-                animationQueue.remove(parseInt(oldTaskId , 10));
+                animationQueue.remove(parseInt(oldTaskId, 10));
               }
 
               const taskId = animationQueue.push(() => {
@@ -263,7 +280,7 @@ declare global {
         } else {
           if (GameState.isInProgress(state)) {
             // Schedule display next question
-            animationQueue.push(()=>{
+            animationQueue.push(() => {
               // clear old nodes
               animationQueue.clear();
               answerContainer.innerHTML = "";
@@ -274,13 +291,24 @@ declare global {
                 appendChild(lettersContainer, elem);
               }
 
-              currentQuestionContainer.textContent =  `${Zipper.indexOfCurrent(state.words) + 1}`;
+              currentQuestionContainer.textContent = `${
+                Zipper.indexOfCurrent(state.words) + 1
+              }`;
             }, 800);
           } else {
-            // Schedule display statistics
-            // scheduleDisplayStatistics();
-            console.log(state);
-            console.log(GameState.calcStats(state))
+            const { perfectWords, totalWrongInputs, worstWord } =
+              GameState.calcStats(state);
+
+            perfectWordsElem.textContent = String(perfectWords);
+            totalWrongInputsElem.textContent = String(totalWrongInputs);
+
+            if (worstWord) {
+              worstWordElem.textContent = worstWord;
+            } else {
+              worstWordContainer.classList.add("d-none");
+            }
+
+            statsContainer.classList.remove("d-none");
           }
         }
       }
@@ -311,30 +339,34 @@ declare global {
     );
   });
 
-  document.addEventListener("keydown", ({ key, ctrlKey, metaKey, altKey, repeat }) => {
-    if (ctrlKey || metaKey || altKey || repeat) {
-      return;
-    }
+  document.addEventListener(
+    "keydown",
+    ({ key, ctrlKey, metaKey, altKey, repeat }) => {
+      if (ctrlKey || metaKey || altKey || repeat) {
+        return;
+      }
 
-    const latinRegex = /^[a-zA-Z]$/;
-    if (!latinRegex.test(key)) {
-      return; // key is not latin
-    }
+      const latinRegex = /^[a-zA-Z]$/;
+      if (!latinRegex.test(key)) {
+        return; // key is not latin
+      }
 
-    document.dispatchEvent(
-      new CustomEvent(EventTypes.INPUT_LETTER, {
-        detail: { letter: key },
-      }),
-    );
-  });
+      document.dispatchEvent(
+        new CustomEvent(EventTypes.INPUT_LETTER, {
+          detail: { letter: key },
+        }),
+      );
+    },
+  );
 
   for (const letter of state.shuffledLetters) {
     const elem = createLetterElem(letter);
     appendChild(lettersContainer, elem);
   }
-  
-  currentQuestionContainer.textContent = 
-  `${Zipper.indexOfCurrent(state.words) + 1}`;
+
+  currentQuestionContainer.textContent = `${
+    Zipper.indexOfCurrent(state.words) + 1
+  }`;
   totalQuestionsContainer.textContent = `${Zipper.length(state.words)}`;
 
   // TODO remove

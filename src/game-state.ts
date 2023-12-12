@@ -60,10 +60,11 @@ export const nextQuestion: (state: Type) => Type = (state) => {
   return state;
 };
 
-export const calcStats: (state: Type) => Stats= ({words, wrongInputs}) => {
+export const calcStats: (state: Type) => Stats = ({ words, wrongInputs }) => {
   let totalWrongInputs = 0;
   let perfectWords = 0;
-  let worstWord, maxFails = 0;   
+  let worstWord,
+    maxFails = 0;
 
   for (const word of Zipper.values(words)) {
     const fails = wrongInputs.get(word) ?? 0;
@@ -78,11 +79,10 @@ export const calcStats: (state: Type) => Stats= ({words, wrongInputs}) => {
       worstWord = word;
     }
   }
-  
+
   return {
     perfectWords,
     totalWrongInputs,
     worstWord, // returns worstWord: undefined on no fails
   };
 };
-

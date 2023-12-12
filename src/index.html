@@ -21,15 +21,13 @@
         cursor: pointer;
       }
 
-      // TODO transitionable property bg-color with easing
-      // jiggle .bg-info, .bg-success and .bg-error classes
-      // thick round border
+      // TODO thick round border
     </style>
   </head>
   <body>
-    <div class="container py-5">
+    <div class="container py-5 d-flex flex-column justify-content-center">
       <div
-        class="d-flex flex-column align-items-center w-100 text-center mx-auto"
+        class="d-flex flex-column align-items-center w-100 text-center mx-auto mb-4"
       >
         <h2 class="mb-5">English Vocabulary Trainer</h2>
 
@@ -54,6 +52,36 @@
             style="height: 46px; border-radius: 6px"
           ></div>
           <div id="letters" class="d-flex align-tems-center"></div>
+        </div>
+      </div>
+      <div id="stats" class="d-none">
+        <div
+          class="d-flex flex-column align-items-center justify-content-center"
+        >
+          <h3 class="mb-3">Well done!</h3>
+          <div class="container-fluid w-50">
+            <div class="row">
+              <div class="col-md-2"></div>
+              <div class="col-md-6">Perfect words:</div>
+              <div class="col-md-4">
+                <span id="perfect_words"></span>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-md-2"></div>
+              <div class="col-md-6">Total mistakes:</div>
+              <div class="col-md-4">
+                <span id="total_wrong_inputs"></span>
+              </div>
+            </div>
+            <div id="worst_word_container" class="row">
+              <div class="col-md-2"></div>
+              <div class="col-md-6">Most struggle with:</div>
+              <div class="col-md-4">
+                <span id="worst_word"></span>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
