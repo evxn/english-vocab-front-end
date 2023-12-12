@@ -35,8 +35,6 @@ const updateLetterValue = (letter: string, elem: Element) => {
   } else {
     replaceLastChild(elem, text);
   }
-
-  console.dir(elem);
 };
 
 const elemEntries = function* <T extends ChildNode>(
@@ -86,9 +84,6 @@ import * as Zipper from "./zipper";
 import * as GameState from "./game-state";
 import { TaskQueue } from "./task-queue";
 
-// TODO remove
-window["GameState"] = GameState;
-
 // ------------- EVENTS -------------
 
 enum EventTypes {
@@ -123,9 +118,6 @@ declare global {
     wrongInputs: new Map(),
     maxWrongInputs: 3,
   });
-
-  // TODO remove
-  window["state"] = state;
 
   const answerContainer = getElementById("answer");
   const lettersContainer = getElementById("letters");
@@ -363,7 +355,4 @@ declare global {
     Zipper.indexOfCurrent(state.words) + 1
   }`;
   totalQuestionsContainer.textContent = `${Zipper.length(state.words)}`;
-
-  // TODO remove
-  console.log(state);
 })();
