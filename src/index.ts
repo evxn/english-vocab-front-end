@@ -117,7 +117,7 @@ declare global {
     },
   );
 
-  renderState.lettersContainer.addEventListener("click", ({ target }) => {
+  renderState.lettersContainer.addEventListener("click", ({ target, pageX, pageY }) => {
     if (!target || !Render.isElement(target as Node)) {
       return;
     }
@@ -129,6 +129,7 @@ declare global {
       return;
     }
 
+    // TODO it's possible to find elem index by pageX, pageY universally for DOM and canvas using document.elementsFromPoint()
     const letterElemIndex = Render.findElemIndex(
       renderState.lettersContainer,
       elem,
