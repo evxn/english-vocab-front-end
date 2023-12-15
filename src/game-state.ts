@@ -1,8 +1,19 @@
-import type { WithOptional } from "./utils";
-import { shuffle } from "./utils";
+import { TaskQueue } from "./task-queue";
+import type { EmptyVariant, Variant, WithOptional } from "./utils";
+import { emptyVariant, shuffle, variant } from "./utils";
 import * as Zipper from "./zipper";
 
+export type GameStatus =
+  | EmptyVariant<"READY_FOR_INPUT">
+  | EmptyVariant<"GAME_FINISHED">
+  | EmptyVariant<"ANSWER_CORRECT">
+  | EmptyVariant<"ANSWER_FAILED">
+  | Variant<"LETTER_MATCHED", { letterIndex: number }>
+  | Variant<"LETTER_ERROR", { letterIndex: number }>;
+
 export interface Type {
+  status: GameStatus;
+  taskQueue: TaskQueue; // used to schedule async state updates
   maxWrongInputs: number; // default: 3
   shuffledLetters: string[];
   words: Zipper.Type<string>; // ensure invariant: each word is unique and has at least 2 distinct letters
@@ -27,9 +38,9 @@ export const isInProgress: (state: Type) => boolean = ({
 
 // safety: ensure that all the words have a non trivial shuffle
 // returns the passed state mutated in-place
-export const init: (state: WithOptional<Type, "shuffledLetters">) => Type = (
-  state,
-) => {
+export const init: (
+  state: WithOptional<Type, "shuffledLetters">,
+) => Type = (state) => {
   const { words } = state;
 
   const word = words.current;
@@ -55,8 +66,40 @@ export const nextQuestion: (state: Type) => Type = (state) => {
   const { words } = state;
 
   state.words = Zipper.next(words);
+  state.status = emptyVariant("READY_FOR_INPUT");
   state = init(state); // initialize shuffled letters for a new word
 
+  return state;
+};
+
+export const finishGame: (state: Type) => Type = (state) => {
+  state.status = emptyVariant("GAME_FINISHED");
+  return state;
+};
+
+export const answerCorrect: (state: Type) => Type = (state) => {
+  state.status = emptyVariant("ANSWER_CORRECT");
+  return state;
+};
+
+export const answerFailed: (state: Type) => Type = (state) => {
+  state.status = emptyVariant("ANSWER_FAILED");
+  return state;
+};
+
+export const letterMatched: (state: Type, letterIndex: number) => Type = (
+  state,
+  letterIndex,
+) => {
+  state.status = variant("LETTER_MATCHED", { letterIndex });
+  return state;
+};
+
+export const letterError: (state: Type, letterIndex: number) => Type = (
+  state,
+  letterIndex,
+) => {
+  state.status = variant("LETTER_ERROR", { letterIndex });
   return state;
 };
 

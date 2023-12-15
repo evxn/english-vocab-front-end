@@ -1,9 +1,9 @@
-import { shuffle, takeFirst } from "./utils";
+import {  emptyVariant, shuffle, takeFirst } from "./utils";
 import { allWords } from "./words-list";
 import * as Zipper from "./zipper";
 import * as GameState from "./game-state";
-import type { RenderState } from "./render-state";
 import * as Render from "./render-state";
+import { TaskQueue } from "./task-queue";
 
 // ------------- EVENTS -------------
 
@@ -35,19 +35,78 @@ declare global {
   const words = Zipper.init(takeFirst(6, shuffledWords));
 
   let state = GameState.init({
+    status: emptyVariant("READY_FOR_INPUT"),
     words,
     wrongInputs: new Map(),
     maxWrongInputs: 3,
+    taskQueue: new TaskQueue(),
   });
 
   const renderState = Render.init();
 
-  Render.renderQuestion(renderState, state);
+  const render = () => {
+    const { status } = state;
+    
+    switch (status.kind) {
+      case "READY_FOR_INPUT": {
+        if (renderState.lettersContainer.children.length === 0) {
+          Render.renderQuestion(renderState, state);
+        }
+        break;
+      }
+      case "GAME_FINISHED": {
+        const stats = GameState.calcStats(state);
+        Render.renderStats(renderState, stats);
+        break;
+      }
+      case "ANSWER_CORRECT": {
+        if (renderState.lettersContainer.children.length > 0) {
+          // move the last matched letter to answers
+          Render.renderLetterMatched(renderState, 0);
+        }
+        break;
+      }
+      case "ANSWER_FAILED": {
+        if (renderState.lettersContainer.children.length > 0) {
+          const {words} = state;
+          Render.renderFailedAnswer(renderState, words.current);
+        }
+        break;
+      }
+      case "LETTER_MATCHED": {
+        Render.renderLetterMatched(renderState, status.letterIndex);
+        state.status = emptyVariant("READY_FOR_INPUT");
+        break;
+      }
+      case "LETTER_ERROR": {
+        Render.renderLetterError(renderState, status.letterIndex);
+        state.status = emptyVariant("READY_FOR_INPUT");
+        break;
+      }
+    }
+
+    requestAnimationFrame(render);
+  }
+
+  // Start the render loop
+  requestAnimationFrame(render);
+
+  const onQuestionCompleted = () => {
+      if (GameState.isInProgress(state)) {
+          state.taskQueue.push(() => {
+              state = GameState.nextQuestion(state);
+          }, 800);
+      } else {
+          state.taskQueue.push(() => {
+              state = GameState.finishGame(state);
+          }, 800);
+      }
+  }
 
   document.addEventListener(
     EventTypes.INPUT_LETTER,
     ({ detail: { letter, letterElemIndex } }) => {
-      if (!GameState.isInProgress(state) || Render.isWaiting(renderState)) {
+      if (!GameState.isInProgress(state)) {
         return;
       }
 
@@ -69,17 +128,12 @@ declare global {
         // remove letter from shuffled letters
         shuffledLetters.splice(letterIndex, 1);
 
-        Render.renderLetterMatched(renderState, letterIndex);
+        state = GameState.letterMatched(state, letterIndex);
 
         // last letter in the word
-        if (shuffledLetters.length === 0) {
-          if (GameState.isInProgress(state)) {
-            state = GameState.nextQuestion(state);
-            Render.waitAndRenderQuestion(renderState, state);
-          } else {
-            const stats = GameState.calcStats(state);
-            Render.renderStats(renderState, stats);
-          }
+        if (shuffledLetters.length === 0) {       
+          state = GameState.answerCorrect(state);
+          onQuestionCompleted();
         }
         return;
       }
@@ -96,21 +150,14 @@ declare global {
       if (wrongInputsCount === maxWrongInputs) {
         shuffledLetters.splice(0); // clear array
 
-        Render.renderFailedAnswer(renderState, word);
-
-        if (GameState.isInProgress(state)) {
-          state = GameState.nextQuestion(state);
-          Render.waitAndRenderQuestion(renderState, state);
-        } else {
-          const stats = GameState.calcStats(state);
-          Render.renderStats(renderState, stats);
-        }
+        state = GameState.answerFailed(state);
+        onQuestionCompleted();
         return;
       }
 
       // here: wrongInputsCount < maxWrongInputs
       if (letterFoundInShuffled) {
-        Render.renderLetterError(renderState, letterIndex);
+        state = GameState.letterError(state, letterIndex);
       }
     },
   );

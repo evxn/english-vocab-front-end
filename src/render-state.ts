@@ -266,29 +266,6 @@ export const renderQuestion = (
   renderShuffledLetters(renderState, state);
 };
 
-export const waitAndRenderQuestion = (
-  renderState: RenderState,
-  state: GameState.Type,
-) => {
-  const {
-    animationQueue,
-    answerContainer,
-    totalQuestionsContainer,
-    currentQuestionContainer,
-    lettersContainer,
-  } = renderState;
-
-  renderState.waiting = true; // wait before next question
-
-  // Schedule display next question
-  animationQueue.push(() => {
-    renderState.waiting = false;
-
-    animationQueue.clear();
-    renderQuestion(renderState, state);
-  }, 800);
-};
-
 export const renderLetterError = (
   renderState: RenderState,
   letterIndex: number,
