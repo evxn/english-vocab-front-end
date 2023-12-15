@@ -66,21 +66,19 @@ declare global {
 
       // case: expected letter
       if (lowerCaseLetter === expectedLetter) {
-        if (letterFoundInShuffled) {
-          // remove letter from shuffled letters
-          shuffledLetters.splice(letterIndex, 1);
+        // remove letter from shuffled letters
+        shuffledLetters.splice(letterIndex, 1);
 
-          Render.renderLetterMatched(renderState, letterIndex);
+        Render.renderLetterMatched(renderState, letterIndex);
 
-          // last letter in the word
-          if (shuffledLetters.length === 0) {
-            if (GameState.isInProgress(state)) {
-              state = GameState.nextQuestion(state);
-              Render.waitAndRenderQuestion(renderState, state);
-            } else {
-              const stats = GameState.calcStats(state);
-              Render.renderStats(renderState, stats);
-            }
+        // last letter in the word
+        if (shuffledLetters.length === 0) {
+          if (GameState.isInProgress(state)) {
+            state = GameState.nextQuestion(state);
+            Render.waitAndRenderQuestion(renderState, state);
+          } else {
+            const stats = GameState.calcStats(state);
+            Render.renderStats(renderState, stats);
           }
         }
         return;
