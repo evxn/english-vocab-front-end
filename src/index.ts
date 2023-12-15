@@ -76,9 +76,6 @@ interface InputLetterEventDetail {
     requestAnimationFrame(render);
   };
 
-  // Start the render loop
-  requestAnimationFrame(render);
-
   const onQuestionCompleted = () => {
     if (GameState.isInProgress(state)) {
       state.taskQueue.push(() => {
@@ -192,4 +189,7 @@ interface InputLetterEventDetail {
       onInput({ letter: key });
     },
   );
+
+  // Start the render loop
+  requestAnimationFrame(render);
 })();
