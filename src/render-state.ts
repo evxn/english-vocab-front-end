@@ -3,8 +3,8 @@ import * as GameState from "./game-state";
 import { TaskQueue } from "./task-queue";
 
 export interface RenderState {
+  lastProcessedStatus: GameState.GameStatus | undefined;
   animationQueue: TaskQueue;
-  waiting: boolean;
   answerContainer: HTMLElement;
   lettersContainer: HTMLElement;
   currentQuestionContainer: HTMLElement;
@@ -17,7 +17,7 @@ export interface RenderState {
 }
 
 export const init = (): RenderState => ({
-  waiting: false,
+  lastProcessedStatus: undefined,
   animationQueue: new TaskQueue(),
   answerContainer: getElementById("answer"),
   lettersContainer: getElementById("letters"),
@@ -29,8 +29,6 @@ export const init = (): RenderState => ({
   worstWordContainer: getElementById("worst_word_container"),
   worstWordElem: getElementById("worst_word"),
 });
-
-export const isWaiting = ({ waiting }: RenderState): boolean => waiting;
 
 export const getElementById = ((context) => (id: string) => {
   const elem = context.getElementById(id);
