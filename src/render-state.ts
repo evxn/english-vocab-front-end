@@ -22,7 +22,7 @@ export const init = (
 ): RenderState => {
   const lettersContainer = getElementById("letters");
 
-  lettersContainer.addEventListener("click", ({ target, pageX, pageY }) => {
+  lettersContainer.addEventListener("click", ({ target }) => {
     if (!target || !isElement(target as Node)) {
       return;
     }
@@ -34,7 +34,6 @@ export const init = (
       return;
     }
 
-    // TODO it's possible to find elem index by pageX, pageY universally for DOM and canvas using document.elementsFromPoint()
     const letterElemIndex = findElemIndex(lettersContainer, elem);
 
     onInput({ letter, letterElemIndex });
