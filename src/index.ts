@@ -57,7 +57,7 @@ declare global {
       case "GAME_FINISHED": {
         const stats = GameState.calcStats(state);
         Render.renderStats(renderState, stats);
-        break;
+        return;
       }
       case "ANSWER_CORRECT": {
         if (renderState.lettersContainer.children.length > 0) {
