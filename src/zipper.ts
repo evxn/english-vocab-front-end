@@ -14,10 +14,10 @@ export interface Type<T> {
 }
 
 // safety: initialize with a non-empty array
-export const init: <T>(array: T[]) => Type<T> = (nonEmprtArray) => ({
-  current: nonEmprtArray[0],
+export const init: <T>(nonEmptyArray: T[]) => Type<T> = (nonEmptyArray) => ({
+  current: nonEmptyArray[0],
   prev: [],
-  next: nonEmprtArray.slice(1),
+  next: nonEmptyArray.slice(1),
 });
 
 export const length: <T>(zipper: Type<T>) => number = ({ prev, next }) =>
