@@ -1,4 +1,4 @@
-import {  emptyVariant, shuffle, takeFirst } from "./utils";
+import { emptyVariant, shuffle, takeFirst } from "./utils";
 import { allWords } from "./words-list";
 import * as Zipper from "./zipper";
 import * as GameState from "./game-state";
@@ -46,7 +46,7 @@ declare global {
 
   const render = () => {
     const { status } = state;
-    
+
     switch (status.kind) {
       case "READY_FOR_INPUT": {
         if (renderState.lettersContainer.children.length === 0) {
@@ -68,7 +68,7 @@ declare global {
       }
       case "ANSWER_FAILED": {
         if (renderState.lettersContainer.children.length > 0) {
-          const {words} = state;
+          const { words } = state;
           Render.renderFailedAnswer(renderState, words.current);
         }
         break;
@@ -86,22 +86,22 @@ declare global {
     }
 
     requestAnimationFrame(render);
-  }
+  };
 
   // Start the render loop
   requestAnimationFrame(render);
 
   const onQuestionCompleted = () => {
-      if (GameState.isInProgress(state)) {
-          state.taskQueue.push(() => {
-              state = GameState.nextQuestion(state);
-          }, 800);
-      } else {
-          state.taskQueue.push(() => {
-              state = GameState.finishGame(state);
-          }, 800);
-      }
-  }
+    if (GameState.isInProgress(state)) {
+      state.taskQueue.push(() => {
+        state = GameState.nextQuestion(state);
+      }, 800);
+    } else {
+      state.taskQueue.push(() => {
+        state = GameState.finishGame(state);
+      }, 800);
+    }
+  };
 
   document.addEventListener(
     EventTypes.INPUT_LETTER,
@@ -131,7 +131,7 @@ declare global {
         state = GameState.letterMatched(state, letterIndex);
 
         // last letter in the word
-        if (shuffledLetters.length === 0) {       
+        if (shuffledLetters.length === 0) {
           state = GameState.answerCorrect(state);
           onQuestionCompleted();
         }
@@ -162,33 +162,36 @@ declare global {
     },
   );
 
-  renderState.lettersContainer.addEventListener("click", ({ target, pageX, pageY }) => {
-    if (!target || !Render.isElement(target as Node)) {
-      return;
-    }
+  renderState.lettersContainer.addEventListener(
+    "click",
+    ({ target, pageX, pageY }) => {
+      if (!target || !Render.isElement(target as Node)) {
+        return;
+      }
 
-    const elem = target as HTMLElement;
-    const letter = elem.dataset?.letter;
+      const elem = target as HTMLElement;
+      const letter = elem.dataset?.letter;
 
-    if (!letter) {
-      return;
-    }
+      if (!letter) {
+        return;
+      }
 
-    // TODO it's possible to find elem index by pageX, pageY universally for DOM and canvas using document.elementsFromPoint()
-    const letterElemIndex = Render.findElemIndex(
-      renderState.lettersContainer,
-      elem,
-    );
+      // TODO it's possible to find elem index by pageX, pageY universally for DOM and canvas using document.elementsFromPoint()
+      const letterElemIndex = Render.findElemIndex(
+        renderState.lettersContainer,
+        elem,
+      );
 
-    document.dispatchEvent(
-      new CustomEvent(EventTypes.INPUT_LETTER, {
-        detail: {
-          letter,
-          letterElemIndex,
-        },
-      }),
-    );
-  });
+      document.dispatchEvent(
+        new CustomEvent(EventTypes.INPUT_LETTER, {
+          detail: {
+            letter,
+            letterElemIndex,
+          },
+        }),
+      );
+    },
+  );
 
   document.addEventListener(
     "keydown",

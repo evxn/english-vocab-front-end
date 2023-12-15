@@ -38,9 +38,9 @@ export const isInProgress: (state: Type) => boolean = ({
 
 // safety: ensure that all the words have a non trivial shuffle
 // returns the passed state mutated in-place
-export const init: (
-  state: WithOptional<Type, "shuffledLetters">,
-) => Type = (state) => {
+export const init: (state: WithOptional<Type, "shuffledLetters">) => Type = (
+  state,
+) => {
   const { words } = state;
 
   const word = words.current;
