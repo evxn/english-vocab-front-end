@@ -4,6 +4,7 @@ import { TaskQueue } from "./task-queue";
 
 export interface RenderState {
   lastProcessedStatus: GameState.GameStatus | undefined;
+  gameStateStatusChangesQueue: GameState.GameStatus[];
   animationQueue: TaskQueue;
   answerContainer: HTMLElement;
   lettersContainer: HTMLElement;
@@ -19,9 +20,13 @@ export interface RenderState {
 
 export const init = (
   onInput: (event: GameState.InputLetterEvent) => void,
+  gameStateRef: Readonly<GameState.Type>,
 ): RenderState => {
-  const lettersContainer = getElementById("letters");
+  const gameStateStatusChangesQueue: GameState.GameStatus[] = [
+    gameStateRef.status,
+  ];
 
+  const lettersContainer = getElementById("letters");
   lettersContainer.addEventListener("click", ({ target }) => {
     if (!target || !isElement(target as Node)) {
       return;
@@ -36,7 +41,10 @@ export const init = (
 
     const letterExactIndex = findElemIndex(lettersContainer, elem);
 
+    // there can be more than one status update per one requestAnimationFrame call
+    // so we have to keep this changes in queue to consume later
     onInput({ letter, letterExactIndex });
+    gameStateStatusChangesQueue.push(gameStateRef.status);
   });
 
   document.addEventListener(
@@ -52,11 +60,21 @@ export const init = (
       }
 
       onInput({ letter: key });
+      gameStateStatusChangesQueue.push(gameStateRef.status);
     },
   );
 
+  // we also have to observe possible state changes made in async task queue as well
+  gameStateRef.taskQueue.onExecute(() => {
+    const lastIdx = gameStateStatusChangesQueue.length - 1;
+    if (gameStateStatusChangesQueue[lastIdx] !== gameStateRef.status) {
+      gameStateStatusChangesQueue.push(gameStateRef.status);
+    }
+  });
+
   return {
     lastProcessedStatus: undefined,
+    gameStateStatusChangesQueue,
     animationQueue: new TaskQueue(),
     answerContainer: getElementById("answer"),
     lettersContainer,

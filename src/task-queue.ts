@@ -8,10 +8,15 @@ export type Task = () => void;
 
 export class TaskQueue {
   private timeouts: Map<TimeoutId, Task> = new Map();
+  private executeCb?: () => void;
 
   push(task: Task, delay: number): TimeoutId {
     const timeoutId = window.setTimeout(() => {
       this.execute(timeoutId);
+
+      if (this.executeCb) {
+        this.executeCb();
+      }
     }, delay);
     this.timeouts.set(timeoutId, task);
 
@@ -28,6 +33,10 @@ export class TaskQueue {
       window.clearTimeout(timeoutId);
     }
     this.timeouts.clear();
+  }
+
+  onExecute(cb: () => void) {
+    this.executeCb = cb;
   }
 
   private execute(timeoutId: TimeoutId) {

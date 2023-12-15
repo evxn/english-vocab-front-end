@@ -98,49 +98,52 @@ import { TaskQueue } from "./task-queue";
 
   // ------------- RENDERING -------------
 
-  const renderState = Render.init(onInput);
+  const renderState = Render.init(onInput, state);
 
   const render = () => {
-    const { status } = state;
+    while (renderState.gameStateStatusChangesQueue.length > 0) {
+      // cast is cafe because queue is not empty
+      const status = renderState.gameStateStatusChangesQueue.shift()!;
 
-    if (renderState.lastProcessedStatus !== status) {
-      switch (status.kind) {
-        case "READY_FOR_INPUT": {
-          if (renderState.lettersContainer.children.length === 0) {
-            Render.renderQuestion(renderState, state);
+      if (renderState.lastProcessedStatus !== status) {
+        switch (status.kind) {
+          case "READY_FOR_INPUT": {
+            if (renderState.lettersContainer.children.length === 0) {
+              Render.renderQuestion(renderState, state);
+            }
+            break;
           }
-          break;
-        }
-        case "GAME_FINISHED": {
-          const stats = GameState.calcStats(state);
-          Render.renderStats(renderState, stats);
-          return;
-        }
-        case "ANSWER_CORRECT": {
-          if (renderState.lettersContainer.children.length > 0) {
-            // move the last matched letter to answers
-            Render.renderLetterMatched(renderState, 0);
+          case "GAME_FINISHED": {
+            const stats = GameState.calcStats(state);
+            Render.renderStats(renderState, stats);
+            return;
           }
-          break;
-        }
-        case "ANSWER_FAILED": {
-          if (renderState.lettersContainer.children.length > 0) {
-            const { words } = state;
-            Render.renderFailedAnswer(renderState, words.current);
+          case "ANSWER_CORRECT": {
+            if (renderState.lettersContainer.children.length > 0) {
+              // move the last matched letter to answers
+              Render.renderLetterMatched(renderState, 0);
+            }
+            break;
           }
-          break;
+          case "ANSWER_FAILED": {
+            if (renderState.lettersContainer.children.length > 0) {
+              const { words } = state;
+              Render.renderFailedAnswer(renderState, words.current);
+            }
+            break;
+          }
+          case "LETTER_MATCHED": {
+            Render.renderLetterMatched(renderState, status.letterIndex);
+            break;
+          }
+          case "LETTER_ERROR": {
+            Render.renderLetterError(renderState, status.letterIndex);
+            break;
+          }
         }
-        case "LETTER_MATCHED": {
-          Render.renderLetterMatched(renderState, status.letterIndex);
-          break;
-        }
-        case "LETTER_ERROR": {
-          Render.renderLetterError(renderState, status.letterIndex);
-          break;
-        }
+
+        renderState.lastProcessedStatus = status;
       }
-
-      renderState.lastProcessedStatus = status;
     }
 
     requestAnimationFrame(render);
