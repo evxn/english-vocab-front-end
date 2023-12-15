@@ -98,7 +98,8 @@ import { TaskQueue } from "./task-queue";
 
   // ------------- RENDERING -------------
 
-  const renderState = Render.init(onInput, state);
+  const readonlyState = state as Readonly<GameState.Type>;
+  const renderState = Render.init(onInput, readonlyState);
 
   const render = () => {
     while (renderState.gameStateStatusChangesQueue.length > 0) {
@@ -109,12 +110,12 @@ import { TaskQueue } from "./task-queue";
         switch (status.kind) {
           case "READY_FOR_INPUT": {
             if (renderState.lettersContainer.children.length === 0) {
-              Render.renderQuestion(renderState, state);
+              Render.renderQuestion(renderState, readonlyState);
             }
             break;
           }
           case "GAME_FINISHED": {
-            const stats = GameState.calcStats(state);
+            const stats = GameState.calcStats(readonlyState);
             Render.renderStats(renderState, stats);
             return;
           }
@@ -127,7 +128,7 @@ import { TaskQueue } from "./task-queue";
           }
           case "ANSWER_FAILED": {
             if (renderState.lettersContainer.children.length > 0) {
-              const { words } = state;
+              const { words } = readonlyState;
               Render.renderFailedAnswer(renderState, words.current);
             }
             break;

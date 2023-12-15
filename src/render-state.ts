@@ -198,7 +198,7 @@ export const renderStats = (
 
 export const renderCounters = (
   renderState: RenderState,
-  state: GameState.Type,
+  state: Readonly<GameState.Type>,
 ) => {
   const { currentQuestionContainer, totalQuestionsContainer } = renderState;
   const { words } = state;
@@ -209,7 +209,7 @@ export const renderCounters = (
 
 export const renderShuffledLetters = (
   renderState: RenderState,
-  state: GameState.Type,
+  state: Readonly<GameState.Type>,
 ) => {
   const { lettersContainer } = renderState;
   const { shuffledLetters } = state;
@@ -316,7 +316,7 @@ export const renderLetterMatched = (
 
 export const renderQuestion = (
   renderState: RenderState,
-  state: GameState.Type,
+  state: Readonly<GameState.Type>,
 ) => {
   clearContainer(renderState.answerContainer); // clear old nodes
   renderCounters(renderState, state);
