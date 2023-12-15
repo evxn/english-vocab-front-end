@@ -11,6 +11,8 @@ interface InputLetterEventDetail {
 }
 
 (function main() {
+  // ------------- GAME LOGIC -------------
+  
   if (allWords.length === 0) {
     return;
   }
@@ -99,6 +101,8 @@ interface InputLetterEventDetail {
     }
   };
 
+  // ------------- RENDERING -------------
+
   const renderState = Render.init();
 
   const render = () => {
@@ -147,6 +151,11 @@ interface InputLetterEventDetail {
     requestAnimationFrame(render);
   };
 
+  // Start the render loop
+  requestAnimationFrame(render);
+
+  // ------------- INPUT -------------
+
   renderState.lettersContainer.addEventListener(
     "click",
     ({ target, pageX, pageY }) => {
@@ -167,10 +176,7 @@ interface InputLetterEventDetail {
         elem,
       );
 
-      onInput({
-        letter,
-        letterElemIndex,
-      });
+      onInput({ letter, letterElemIndex });
     },
   );
 
@@ -189,7 +195,4 @@ interface InputLetterEventDetail {
       onInput({ letter: key });
     },
   );
-
-  // Start the render loop
-  requestAnimationFrame(render);
 })();
