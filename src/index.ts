@@ -39,7 +39,7 @@ import { TaskQueue } from "./task-queue";
 
   const onInput: (event: GameState.InputLetterEvent) => void = ({
     letter,
-    letterElemIndex,
+    letterExactIndex,
   }) => {
     if (!GameState.isInProgress(state)) {
       return;
@@ -55,7 +55,7 @@ import { TaskQueue } from "./task-queue";
     const expectedLetter = word[word.length - shuffledLetters.length];
     const lowerCaseLetter = letter.toLowerCase();
     const letterIndex =
-      letterElemIndex ?? state.shuffledLetters.indexOf(lowerCaseLetter);
+      letterExactIndex ?? state.shuffledLetters.indexOf(lowerCaseLetter);
     const letterFoundInShuffled = letterIndex !== -1;
 
     // case: expected letter

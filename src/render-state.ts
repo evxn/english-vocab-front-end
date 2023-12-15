@@ -34,9 +34,9 @@ export const init = (
       return;
     }
 
-    const letterElemIndex = findElemIndex(lettersContainer, elem);
+    const letterExactIndex = findElemIndex(lettersContainer, elem);
 
-    onInput({ letter, letterElemIndex });
+    onInput({ letter, letterExactIndex });
   });
 
   document.addEventListener(
