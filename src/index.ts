@@ -5,14 +5,9 @@ import * as GameState from "./game-state";
 import * as Render from "./render-state";
 import { TaskQueue } from "./task-queue";
 
-interface InputLetterEventDetail {
-  letter: string;
-  letterElemIndex?: number; // is used to make the right elem red on click if there're duplicate letters in the word
-}
-
 (function main() {
   // ------------- GAME LOGIC -------------
-  
+
   if (allWords.length === 0) {
     return;
   }
@@ -42,7 +37,7 @@ interface InputLetterEventDetail {
     }
   };
 
-  const onInput: (eventDetail: InputLetterEventDetail) => void = ({
+  const onInput: (event: GameState.InputLetterEvent) => void = ({
     letter,
     letterElemIndex,
   }) => {
@@ -103,7 +98,7 @@ interface InputLetterEventDetail {
 
   // ------------- RENDERING -------------
 
-  const renderState = Render.init();
+  const renderState = Render.init(onInput);
 
   const render = () => {
     const { status } = state;
@@ -153,46 +148,4 @@ interface InputLetterEventDetail {
 
   // Start the render loop
   requestAnimationFrame(render);
-
-  // ------------- INPUT -------------
-
-  renderState.lettersContainer.addEventListener(
-    "click",
-    ({ target, pageX, pageY }) => {
-      if (!target || !Render.isElement(target as Node)) {
-        return;
-      }
-
-      const elem = target as HTMLElement;
-      const letter = elem.dataset?.letter;
-
-      if (!letter) {
-        return;
-      }
-
-      // TODO it's possible to find elem index by pageX, pageY universally for DOM and canvas using document.elementsFromPoint()
-      const letterElemIndex = Render.findElemIndex(
-        renderState.lettersContainer,
-        elem,
-      );
-
-      onInput({ letter, letterElemIndex });
-    },
-  );
-
-  document.addEventListener(
-    "keydown",
-    ({ key, ctrlKey, metaKey, altKey, repeat }) => {
-      if (ctrlKey || metaKey || altKey || repeat) {
-        return;
-      }
-
-      const latinRegex = /^[a-zA-Z]$/;
-      if (!latinRegex.test(key)) {
-        return; // key is not latin
-      }
-
-      onInput({ letter: key });
-    },
-  );
 })();

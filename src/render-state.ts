@@ -14,21 +14,63 @@ export interface RenderState {
   totalWrongInputsElem: HTMLElement;
   worstWordContainer: HTMLElement;
   worstWordElem: HTMLElement;
+  onInput: (event: GameState.InputLetterEvent) => void;
 }
 
-export const init = (): RenderState => ({
-  lastProcessedStatus: undefined,
-  animationQueue: new TaskQueue(),
-  answerContainer: getElementById("answer"),
-  lettersContainer: getElementById("letters"),
-  currentQuestionContainer: getElementById("current_question"),
-  totalQuestionsContainer: getElementById("total_questions"),
-  statsContainer: getElementById("stats"),
-  perfectWordsElem: getElementById("perfect_words"),
-  totalWrongInputsElem: getElementById("total_wrong_inputs"),
-  worstWordContainer: getElementById("worst_word_container"),
-  worstWordElem: getElementById("worst_word"),
-});
+export const init = (
+  onInput: (event: GameState.InputLetterEvent) => void,
+): RenderState => {
+  const lettersContainer = getElementById("letters");
+
+  lettersContainer.addEventListener("click", ({ target, pageX, pageY }) => {
+    if (!target || !isElement(target as Node)) {
+      return;
+    }
+
+    const elem = target as HTMLElement;
+    const letter = elem.dataset?.letter;
+
+    if (!letter) {
+      return;
+    }
+
+    // TODO it's possible to find elem index by pageX, pageY universally for DOM and canvas using document.elementsFromPoint()
+    const letterElemIndex = findElemIndex(lettersContainer, elem);
+
+    onInput({ letter, letterElemIndex });
+  });
+
+  document.addEventListener(
+    "keydown",
+    ({ key, ctrlKey, metaKey, altKey, repeat }) => {
+      if (ctrlKey || metaKey || altKey || repeat) {
+        return;
+      }
+
+      const latinRegex = /^[a-zA-Z]$/;
+      if (!latinRegex.test(key)) {
+        return; // key is not latin
+      }
+
+      onInput({ letter: key });
+    },
+  );
+
+  return {
+    lastProcessedStatus: undefined,
+    animationQueue: new TaskQueue(),
+    answerContainer: getElementById("answer"),
+    lettersContainer,
+    currentQuestionContainer: getElementById("current_question"),
+    totalQuestionsContainer: getElementById("total_questions"),
+    statsContainer: getElementById("stats"),
+    perfectWordsElem: getElementById("perfect_words"),
+    totalWrongInputsElem: getElementById("total_wrong_inputs"),
+    worstWordContainer: getElementById("worst_word_container"),
+    worstWordElem: getElementById("worst_word"),
+    onInput,
+  };
+};
 
 export const getElementById = ((context) => (id: string) => {
   const elem = context.getElementById(id);

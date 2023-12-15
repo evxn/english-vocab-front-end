@@ -26,6 +26,11 @@ export interface Stats {
   worstWord?: string;
 }
 
+export interface InputLetterEvent {
+  letter: string;
+  letterElemIndex?: number; // is used to make the right elem red on click if there're duplicate letters in the word
+}
+
 export const isInProgress: (state: Type) => boolean = ({
   maxWrongInputs,
   wrongInputs,
