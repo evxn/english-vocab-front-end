@@ -28,54 +28,6 @@ interface InputLetterEventDetail {
     taskQueue: new TaskQueue(),
   });
 
-  const renderState = Render.init();
-
-  const render = () => {
-    const { status } = state;
-
-    if (renderState.lastProcessedStatus !== status) {
-      switch (status.kind) {
-        case "READY_FOR_INPUT": {
-          if (renderState.lettersContainer.children.length === 0) {
-            Render.renderQuestion(renderState, state);
-          }
-          break;
-        }
-        case "GAME_FINISHED": {
-          const stats = GameState.calcStats(state);
-          Render.renderStats(renderState, stats);
-          return;
-        }
-        case "ANSWER_CORRECT": {
-          if (renderState.lettersContainer.children.length > 0) {
-            // move the last matched letter to answers
-            Render.renderLetterMatched(renderState, 0);
-          }
-          break;
-        }
-        case "ANSWER_FAILED": {
-          if (renderState.lettersContainer.children.length > 0) {
-            const { words } = state;
-            Render.renderFailedAnswer(renderState, words.current);
-          }
-          break;
-        }
-        case "LETTER_MATCHED": {
-          Render.renderLetterMatched(renderState, status.letterIndex);
-          break;
-        }
-        case "LETTER_ERROR": {
-          Render.renderLetterError(renderState, status.letterIndex);
-          break;
-        }
-      }
-
-      renderState.lastProcessedStatus = status;
-    }
-
-    requestAnimationFrame(render);
-  };
-
   const onQuestionCompleted = () => {
     if (GameState.isInProgress(state)) {
       state.taskQueue.push(() => {
@@ -145,6 +97,54 @@ interface InputLetterEventDetail {
     if (letterFoundInShuffled) {
       state = GameState.letterError(state, letterIndex);
     }
+  };
+
+  const renderState = Render.init();
+
+  const render = () => {
+    const { status } = state;
+
+    if (renderState.lastProcessedStatus !== status) {
+      switch (status.kind) {
+        case "READY_FOR_INPUT": {
+          if (renderState.lettersContainer.children.length === 0) {
+            Render.renderQuestion(renderState, state);
+          }
+          break;
+        }
+        case "GAME_FINISHED": {
+          const stats = GameState.calcStats(state);
+          Render.renderStats(renderState, stats);
+          return;
+        }
+        case "ANSWER_CORRECT": {
+          if (renderState.lettersContainer.children.length > 0) {
+            // move the last matched letter to answers
+            Render.renderLetterMatched(renderState, 0);
+          }
+          break;
+        }
+        case "ANSWER_FAILED": {
+          if (renderState.lettersContainer.children.length > 0) {
+            const { words } = state;
+            Render.renderFailedAnswer(renderState, words.current);
+          }
+          break;
+        }
+        case "LETTER_MATCHED": {
+          Render.renderLetterMatched(renderState, status.letterIndex);
+          break;
+        }
+        case "LETTER_ERROR": {
+          Render.renderLetterError(renderState, status.letterIndex);
+          break;
+        }
+      }
+
+      renderState.lastProcessedStatus = status;
+    }
+
+    requestAnimationFrame(render);
   };
 
   renderState.lettersContainer.addEventListener(
