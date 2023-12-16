@@ -1,12 +1,17 @@
 // https://stackoverflow.com/questions/380438/what-is-the-zipper-data-structure-and-should-i-be-using-it
+// Zipper is a non-empty list with a movable pointer to the currently selected element. It's guarantied that the pointer always points to some element. So the selection is always valid.
 // Example usage:
 // const arr = [1, 2, 3, 4, 5];
 // let zipper = init(arr);
-// console.log(zipper.current); // Output: 1
+// console.log(zipper); // Output: {current: 1, prev: [], next: [2,3,4,5]}
 // zipper = next(zipper);
-// console.log(zipper.current); // Output: 2
+// console.log(zipper); // Output: {current: 2, prev: [1], next: [3,4,5]}
+// zipper = next(zipper);
+// console.log(zipper); // Output: {current: 3, prev: [1,2], next: [4,5]}
+// zipper = prev(prev(zipper));
+// console.log(zipper); // Output: {current: 1, prev: [], next: [2,3,4,5]}
 // zipper = prev(zipper);
-// console.log(zipper.current); // Output: 1
+// console.log(zipper); // Output: {current: 1, prev: [], next: [2,3,4,5]} <-- pointer doesn't move out of border
 export interface Type<T> {
   current: T;
   prev: T[];
