@@ -1,7 +1,10 @@
 // The only nicities this one provides are
 // automatic task scheduling, execution and
 // timeout cleanups upon adding/removing tasks
-// to and from a queue and a batch clear method
+// to and from a queue and a batch clear method.
+// also runs your callbacks immediately after a task execution.
+// beware that you cannot unregister this callbacks
+// they will keep be called upon a task execution while queue is in memory
 
 export type TimeoutId = number;
 export type Task = () => void;
