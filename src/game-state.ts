@@ -12,7 +12,7 @@ export type GameStatus =
   | Variant<"LETTER_ERROR", { letterIndex: number }>;
 
 export interface Type {
-  status: GameStatus;
+  status: GameStatus; // safety: to use in referential equality ensure all property updates are immutable
   taskQueue: TaskQueue; // used to schedule async state updates
   maxWrongInputs: number; // default: 3
   shuffledLetters: string[];

@@ -67,6 +67,7 @@ export const init = (
   // we also have to observe possible state changes made in async task queue as well
   gameStateRef.taskQueue.onExecute(() => {
     const lastIdx = gameStateStatusChangesQueue.length - 1;
+    // check depends on status being immutably updated
     if (gameStateStatusChangesQueue[lastIdx] !== gameStateRef.status) {
       gameStateStatusChangesQueue.push(gameStateRef.status);
     }
@@ -318,7 +319,7 @@ export const renderQuestion = (
   renderState: RenderState,
   state: Readonly<GameState.Type>,
 ) => {
-  clearContainer(renderState.answerContainer); // clear old nodes
+  clearContainer(renderState.answerContainer); // clear old nodes, generates a bit of garbage
   renderCounters(renderState, state);
   renderShuffledLetters(renderState, state);
 };

@@ -106,6 +106,7 @@ import { TaskQueue } from "./task-queue";
       // cast is cafe because queue is not empty
       const status = renderState.gameStateStatusChangesQueue.shift()!;
 
+      // check depends on status being immutably updated
       if (renderState.lastProcessedStatus !== status) {
         switch (status.kind) {
           case "READY_FOR_INPUT": {
