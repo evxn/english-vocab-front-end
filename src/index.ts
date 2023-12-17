@@ -22,6 +22,7 @@ import { TaskQueue } from "./task-queue";
     words,
     wrongInputs: new Map(),
     maxWrongInputs: 3,
+    // note: if you want to easily deserialize taskQueue you should use it in a blocking way: no state changes outside of queue are allowed while queue is not empty. this guaranties that you can restore the task queue state in just one iteration of game loop. starting with the previous game state (except you init it with an empty taskQueue) and the last recorded event and passing them to the game loop. after the call you'll get the last state with a restored TaskQueue
     taskQueue: new TaskQueue(),
   });
 
