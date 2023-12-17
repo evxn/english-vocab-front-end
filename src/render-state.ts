@@ -66,11 +66,7 @@ export const init = (
 
   // we also have to observe possible state changes made in async task queue as well
   gameStateRef.taskQueue.onExecute(() => {
-    const lastIdx = gameStateStatusChangesQueue.length - 1;
-    // check depends on status being immutably updated
-    if (gameStateStatusChangesQueue[lastIdx] !== gameStateRef.status) {
-      gameStateStatusChangesQueue.push(gameStateRef.status);
-    }
+    gameStateStatusChangesQueue.push(gameStateRef.status);
   });
 
   return {
