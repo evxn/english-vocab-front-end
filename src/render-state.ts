@@ -15,7 +15,6 @@ export interface RenderState {
   totalWrongInputsElem: HTMLElement;
   worstWordContainer: HTMLElement;
   worstWordElem: HTMLElement;
-  onInput: (event: GameState.InputLetterEvent) => void;
 }
 
 export const init = (
@@ -25,6 +24,13 @@ export const init = (
   const gameStateStatusChangesQueue: GameState.GameStatus[] = [
     gameStateRef.status,
   ];
+
+  const processInput = (inputEvent: GameState.InputLetterEvent) => {
+    onInput(inputEvent);
+    // there can be more than one status update per one requestAnimationFrame call
+    // so we have to keep this changes in queue to consume later
+    gameStateStatusChangesQueue.push(gameStateRef.status);
+  };
 
   const lettersContainer = getElementById("letters");
   lettersContainer.addEventListener("click", ({ target }) => {
@@ -41,10 +47,7 @@ export const init = (
 
     const letterExactIndex = findElemIndex(lettersContainer, elem);
 
-    // there can be more than one status update per one requestAnimationFrame call
-    // so we have to keep this changes in queue to consume later
-    onInput({ letter, letterExactIndex });
-    gameStateStatusChangesQueue.push(gameStateRef.status);
+    processInput({ letter, letterExactIndex });
   });
 
   document.addEventListener(
@@ -59,8 +62,7 @@ export const init = (
         return; // key is not latin
       }
 
-      onInput({ letter: key });
-      gameStateStatusChangesQueue.push(gameStateRef.status);
+      processInput({ letter: key });
     },
   );
 
@@ -82,7 +84,6 @@ export const init = (
     totalWrongInputsElem: getElementById("total_wrong_inputs"),
     worstWordContainer: getElementById("worst_word_container"),
     worstWordElem: getElementById("worst_word"),
-    onInput,
   };
 };
 
@@ -217,6 +218,29 @@ export const renderShuffledLetters = (
   }
 };
 
+export const renderAnswer = (
+  renderState: RenderState,
+  state: Readonly<GameState.Type>,
+) => {
+  const { answerContainer, animationQueue } = renderState;
+  const { words, shuffledLetters } = state;
+  const word = words.current;
+  const answeredLetters = word
+    .slice(0, word.length - shuffledLetters.length)
+    .split("");
+
+  for (const [letterIndex, letter] of answeredLetters.entries()) {
+    const elem = createLetterElem(letter);
+    appendChild(answerContainer, elem);
+
+    const letterElem = answerContainer.children.item(letterIndex)!;
+    letterElem.classList.remove("bg-primary");
+    letterElem.classList.remove("bg-danger");
+    letterElem.classList.remove("thick-border");
+    letterElem.classList.add("bg-success");
+  }
+};
+
 // safety: non-null assertion assumes that shuffledLetters state one to one syncronized with the DOM elements
 const getShuffledLetterElem = (
   lettersContainer: HTMLElement,
@@ -317,6 +341,7 @@ export const renderQuestion = (
 ) => {
   clearContainer(renderState.answerContainer); // clear old nodes, generates a bit of garbage
   renderCounters(renderState, state);
+  renderAnswer(renderState, state);
   renderShuffledLetters(renderState, state);
 };
 

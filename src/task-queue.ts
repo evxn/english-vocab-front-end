@@ -16,10 +16,6 @@ export class TaskQueue {
   push(task: Task, delay: number): TimeoutId {
     const timeoutId = window.setTimeout(() => {
       this.execute(timeoutId);
-
-      for (const cb of this.onExecuteListeners) {
-        cb();
-      }
     }, delay);
 
     this.timeouts.set(timeoutId, task);
@@ -27,9 +23,20 @@ export class TaskQueue {
     return timeoutId;
   }
 
+  get length(): number {
+    return this.timeouts.size;
+  }
+
   remove(timeoutId: TimeoutId) {
     window.clearTimeout(timeoutId);
     this.timeouts.delete(timeoutId);
+  }
+
+  executeImmediately() {
+    for (const timeoutId of this.timeouts.keys()) {
+      window.clearTimeout(timeoutId);
+      this.execute(timeoutId);
+    }
   }
 
   clear() {
@@ -45,9 +52,14 @@ export class TaskQueue {
 
   private execute(timeoutId: TimeoutId) {
     const task = this.timeouts.get(timeoutId);
+
     if (task) {
       task();
       this.timeouts.delete(timeoutId);
+
+      for (const cb of this.onExecuteListeners) {
+        cb();
+      }
     }
   }
 }

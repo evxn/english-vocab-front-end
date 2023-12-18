@@ -3,9 +3,16 @@ import type { EmptyVariant, Variant, WithOptional } from "./utils";
 import { emptyVariant, shuffle, variant } from "./utils";
 import * as Zipper from "./zipper";
 
+export const LAST_INPUT = "LAST_INPUT";
+export const PREV_STATE = "PREV_STATE";
+export const CURRENT_STATE = "CURRENT_STATE";
+
+export type Config = WithOptional<Type, "shuffledLetters">;
+
 export type GameStatus =
   | EmptyVariant<"READY_FOR_INPUT">
-  | EmptyVariant<"GAME_FINISHED">
+  | EmptyVariant<"GAME_FINISHED_ANSWER_CORRECT">
+  | EmptyVariant<"GAME_FINISHED_ANSWER_FAILED">
   | EmptyVariant<"ANSWER_CORRECT">
   | EmptyVariant<"ANSWER_FAILED">
   | Variant<"LETTER_MATCHED", { letterIndex: number }>
@@ -43,9 +50,7 @@ export const isInProgress: (state: Type) => boolean = ({
 
 // safety: ensure that all the words have a non trivial shuffle
 // returns the passed state mutated in-place
-export const init: (state: WithOptional<Type, "shuffledLetters">) => Type = (
-  state,
-) => {
+export const init: (state: Config) => Type = (state) => {
   const { words } = state;
 
   const word = words.current;
@@ -77,8 +82,24 @@ export const nextQuestion: (state: Type) => Type = (state) => {
   return state;
 };
 
+const finishStatus: (
+  status: EmptyVariant<"ANSWER_CORRECT"> | EmptyVariant<"ANSWER_FAILED">,
+) =>
+  | EmptyVariant<"GAME_FINISHED_ANSWER_CORRECT">
+  | EmptyVariant<"GAME_FINISHED_ANSWER_FAILED"> = ({ kind }) =>
+  emptyVariant(
+    kind === "ANSWER_CORRECT"
+      ? "GAME_FINISHED_ANSWER_CORRECT"
+      : "GAME_FINISHED_ANSWER_FAILED",
+  );
+
 export const finishGame: (state: Type) => Type = (state) => {
-  state.status = emptyVariant("GAME_FINISHED");
+  if (
+    state.status.kind === "ANSWER_CORRECT" ||
+    state.status.kind === "ANSWER_FAILED"
+  ) {
+    state.status = finishStatus(state.status);
+  }
   return state;
 };
 
@@ -133,4 +154,157 @@ export const calcStats: (state: Type) => Stats = ({ words, wrongInputs }) => {
     totalWrongInputs,
     worstWord, // returns worstWord: undefined on no fails
   };
+};
+
+export const parseInputLetterEvent = (
+  localStorageItem: string | null,
+): InputLetterEvent | null => {
+  if (localStorageItem === null) {
+    return null;
+  }
+
+  try {
+    const { letter, letterExactIndex } = JSON.parse(localStorageItem);
+
+    if (
+      typeof letter === "string" &&
+      letter.length === 1 &&
+      (letterExactIndex === undefined ||
+        (typeof letterExactIndex === "number" &&
+          Number.isSafeInteger(letterExactIndex) &&
+          letterExactIndex >= 0))
+    ) {
+      return {
+        letter,
+        letterExactIndex,
+      };
+    }
+  } catch (e) {}
+
+  return null;
+};
+
+export const parseStateConfig = (
+  localStorageItem: string | null,
+): Omit<Type, "taskQueue"> | null => {
+  if (localStorageItem === null) {
+    return null;
+  }
+
+  try {
+    const {
+      status: { kind, letterIndex },
+      words: { current, prev, next },
+      shuffledLetters,
+      maxWrongInputs,
+      wrongInputs: entries,
+    } = JSON.parse(localStorageItem);
+
+    if (
+      !(
+        typeof kind === "string" &&
+        ((letterIndex === undefined &&
+          (kind === "READY_FOR_INPUT" ||
+            kind === "GAME_FINISHED" ||
+            kind === "ANSWER_CORRECT" ||
+            kind === "ANSWER_FAILED")) ||
+          ((kind === "LETTER_MATCHED" || kind === "LETTER_ERROR") &&
+            typeof letterIndex === "number" &&
+            Number.isSafeInteger(letterIndex) &&
+            letterIndex >= 0))
+      )
+    ) {
+      return null;
+    }
+
+    const status = { kind, letterIndex } as GameStatus;
+
+    if (
+      !(
+        typeof maxWrongInputs === "number" &&
+        Number.isSafeInteger(maxWrongInputs) &&
+        maxWrongInputs >= 0
+      )
+    ) {
+      return null;
+    }
+
+    if (
+      !(
+        Array.isArray(entries) &&
+        entries.every(
+          (item) =>
+            Array.isArray(item) &&
+            item.length == 2 &&
+            typeof item[0] === "string" &&
+            typeof item[1] === "number" &&
+            Number.isSafeInteger(item[1]) &&
+            item[1] >= 0,
+        )
+      )
+    ) {
+      return null;
+    }
+
+    const wrongInputs = new Map(entries as [string, number][]);
+
+    if (
+      !(
+        Array.isArray(prev) &&
+        Array.isArray(next) &&
+        typeof current === "string" &&
+        prev.every((item: unknown) => typeof item === "string") &&
+        next.every((item: unknown) => typeof item === "string")
+      )
+    ) {
+      return null;
+    }
+
+    const words = {
+      current,
+      prev,
+      next,
+    } as Zipper.Type<string>;
+
+    if (
+      !(
+        Array.isArray(shuffledLetters) &&
+        shuffledLetters.every(
+          (item) => typeof item === "string" && item.length === 1,
+        )
+      )
+    ) {
+      return null;
+    }
+
+    return {
+      status,
+      words,
+      shuffledLetters,
+      maxWrongInputs,
+      wrongInputs,
+    };
+  } catch (e) {}
+
+  return null;
+};
+
+export const serialize = ({
+  status,
+  words,
+  shuffledLetters,
+  maxWrongInputs,
+  wrongInputs,
+}: Omit<Type, "taskQueue">): string => {
+  const entries = Array.from(wrongInputs);
+
+  const serializableConfig = {
+    status,
+    words,
+    shuffledLetters,
+    maxWrongInputs,
+    wrongInputs: entries,
+  };
+
+  return JSON.stringify(serializableConfig);
 };

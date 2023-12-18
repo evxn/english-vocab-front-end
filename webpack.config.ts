@@ -47,6 +47,7 @@ const config: Configuration = {
   plugins: [
     new HtmlWebpackPlugin({
       template: "./src/index.html",
+      scriptLoading: "blocking",
     }),
   ],
 
