@@ -1,6 +1,76 @@
-# Тестовое на вакансию Frontend (React / Vue.js) Developer
+# Front-End Test Assignment
 
-[Тестовое задание](https://www.notion.so/fundraiseup/4c2121dc756f41d9abbe569d9d36d1f8). Прочитайте его до конца перед началом выполнения. Если возникли вопросы, вы можете их задать рекрутеру, он передаст их разработчикам.
+Let's develop the client-side of a training app for practicing and memorizing English words.
+
+Here's how the result should look like:
+
+[Screen Recording 2023-03-21 at 14.35.40.mov](https://s3-us-west-2.amazonaws.com/secure.notion-static.com/852170a9-a65a-4319-861a-18a3bee928de/Screen_Recording_2023-03-21_at_14.35.40.mov)
+
+## Markup
+
+Use the **[ready-made markup](https://gist.github.com/anton-isaykin/6018c5e125ecf8b66ac89634d839960d)** for the application. Modify the layout if necessary.
+
+## Business Logic
+
+- A set of words for training is hardcoded into the application.
+
+    ```json
+    [
+      "apple",
+      "function",
+      "timeout",
+      "task",
+      "application",
+      "data",
+      "tragedy",
+      "sun",
+      "symbol",
+      "button",
+      "software"
+    ]
+    ```
+
+- Each training session contains 6 random words from the list and represents a sequential set of tasks.
+- In each task, the user receives a word broken into letters, shuffled in a random order.
+- The user's task is to assemble the entire word by moving the letters from one container to another.
+- The user can click on letter buttons or press corresponding keys on the keyboard.
+- If the user selects an incorrect letter, the application marks it as an error and highlights the respective button in red.
+- When typing on the keyboard, error highlighting only occurs if the letter is present in the word. If it's absent, the application acknowledges the error without indication.
+- If the user presses a key for a missing letter, the application registers it as an error.
+- The maximum number of errors in one task is 3. Upon reaching this limit, all buttons arrange correctly but change color to red. After a slight delay, it moves to the next task.
+- Upon completing the training, the application provides statistics:
+    - Number of words assembled without errors.
+    - Number of errors.
+    - Word with the highest number of errors.
+- There is no predefined UI for displaying statistics; represent the data in any convenient way.
+
+## Bonus Track
+
+Fulfill additional requirements if the task seems too easy.
+
+- If the user closes tabs or refreshes the page before completing the task, the application, upon revisiting the page, should offer to continue the previously started training. If the user agrees, the application restores itself to the same state as at the time of tab closure or page refresh.
+- The application responds to browser history navigation button clicks and allows moving between completed tasks.
+
+# Technical Requirements
+
+- All code should be written in TypeScript.
+- Set up the project build independently: Webpack 5, Babel, TS, and dev server.
+- In the dev build, serve the HTML application page using Webpack Dev Server and hot module replacement.
+- Separate business logic and presentation logic so that it's possible to seamlessly replace the UI layer - for instance, use Canvas instead of DOM.
+- Avoid using frameworks and ready-made libraries. All DOM interactions should be done using standard means.
+- Do not use Flux or similar patterns for organizing application data and logic.
+- All code should reside in a single repository.
+- Attach a `README` file describing the build process and how to run the application.
+- Format the code using [prettier](https://prettier.io/) with the default config.
+- Along with the repository link, provide a brief overview of the challenges encountered during the test and the time spent.
+
+# How We Evaluate the Test
+
+We thoroughly review the test. Two developers from our team perform a code review and make a decision. Ultimately, it boils down to these simple criteria:
+
+- [ ] The code is simple and easy to read.
+- [ ] All requirements from the specification are fulfilled.
+- [ ] No bugs.
 
 # Install Dev Dependencies
 
@@ -27,13 +97,4 @@ $ npm run start
 ```sh
 $ npm run format
 ```
-
-# Notes
-
-- Задание выполнено без бонус трека, не хотелось писать свою сериализацию/десериализацию класса `Map` в/из JSON. Всё необходимое для старта или продолжения игры состояние хранится в типе `GameState.Type`.
-- Сборка была реализована только для `--mode development`, чтобы не плодить конфигов и зависимостей (`webpack-merge`, `webpack-terser` и тд), потому как нет конкретных требований к production сборке.
-- Реализация заняла около 2-3 рабочих дней.
-- Из видео сложно понять, как работает border при индикации ошибки. То что он не появляется при вводе с клавиатуры это баг или фича? Может ли эта рамка быть видна для нескольких букв одновременно или должна перескакивать к последнему ошибочному вводу? Для консистентности я показываю border и для keyboard эвентов и разрешаю несколько индикаций одновременно. Иные реализации требуют прокидывания в соотв. функции дополнительных параметров.
-- Механизм `Render.isWaiting(renderState)` не требуется для корректной работы, потому что обработка эвентов во время ожидания перехода к следующему вопросу обрубается при пустом `shuffledLetters`. Но тем не менее, этот механизм более явный и он работает при любом состоянии `shuffledLetters`.
-- При реализации использовалась парадигма single source of truth. Всё что можно вычисляется из минимального необходимого состояния.
 
