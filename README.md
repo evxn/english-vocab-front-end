@@ -4,7 +4,7 @@ Let's develop the client-side of a training app for practicing and memorizing En
 
 Here's how the result should look like:
 
-[Screen Recording 2023-03-21 at 14.35.40.mov](https://s3-us-west-2.amazonaws.com/secure.notion-static.com/852170a9-a65a-4319-861a-18a3bee928de/Screen_Recording_2023-03-21_at_14.35.40.mov)
+[Screen Recording 2023-03-21 at 14.35.40.mov](./Screen%20Recording%202023-03-21%20at%2014.35.40.mov)
 
 ## Markup
 
